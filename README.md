@@ -1,2 +1,2 @@
 # install all dependency for backend
-```<p>npm i</p>```
+```npm I or npm install```
