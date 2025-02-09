@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "test",
-    "serve": "node index.js"
+    "serve": "nodemon index.js"
   },
   "author": "Aryo wibisono",
   "license": "ISC",
@@ -13,10 +13,12 @@
     "@reclaimprotocol/attestor-core": "^4.0.0",
     "@reclaimprotocol/js-sdk": "^2.2.1",
     "@reclaimprotocol/zk-fetch": "^0.3.1",
+    "axios": "^1.7.9",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "node-fetch": "^3.3.2"
+    "node-fetch": "^3.3.2",
+    "nodemon": "^3.1.9"
   }
 }
