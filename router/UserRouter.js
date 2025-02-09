@@ -1,5 +1,5 @@
 const express = require('express');
-const router = express.Router();  // Gunakan router, bukan app
+const router = express.Router(); 
 
 const controller = require('../controller/UserController');
 
