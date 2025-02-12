@@ -7,6 +7,10 @@ npm i  # or npm install
 ```sh
 npm run serve
 ```
+# Set up
+```sh
+duplicat .env.e.example into .env and set your credentials
+```
 
 # 📡 API Endpoint  
 
