@@ -1,0 +1,23 @@
+name: Update Environment Variables
+
+on:
+  workflow_dispatch: # Menjalankan workflow secara manual
+
+jobs:
+  update-env:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /deploy/snoorefi/backend
+            echo "${{ secrets.ENV_FILE }}" > .env
+            docker-compose restart
