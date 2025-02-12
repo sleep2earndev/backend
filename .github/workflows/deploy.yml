@@ -55,4 +55,5 @@ jobs:
 
             # Restart backend dengan image terbaru
             docker-compose pull
+            docker-compose down
             docker-compose up -d --remove-orphans
