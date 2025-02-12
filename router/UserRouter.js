@@ -1,8 +1,9 @@
 const express = require('express');
-const router = express.Router(); 
+const router = express.Router();
 
 const controller = require('../controller/UserController');
 
-router.post('/oauth', controller.getToken);
+router.get('/auth/fitbit', controller.redirectURi);
+router.get('/auth/fitbit/callback', controller.auth);
 
 module.exports = router;
