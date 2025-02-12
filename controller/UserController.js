@@ -1,4 +1,6 @@
 const model = require("../model/UserModel");
+require('dotenv').config();
+
 
 const redirectURi = (req, res) => {
   const authUrl = `https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=${process.env.CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.REDIRECT_URI)}&scope=activity%20sleep%20profile`;
@@ -6,6 +8,7 @@ const redirectURi = (req, res) => {
 }
 
 const auth = async (req, res) => {
+  
   try {
     const code = req.query.code
     if (!code) {
@@ -20,22 +23,22 @@ const auth = async (req, res) => {
     }
     console.log('token:',access_token,'refresh:', refresh_token)
     res.cookie("access_token", access_token, { 
-      httpOnly: true,
-      secure: true, // Wajib pakai HTTPS
-      sameSite: "Lax", // Cukup untuk subdomain
-      domain: ".syaad.dev",
+      httpOnly: process.env.HTTPONLY,
+      secure: process.env.NODE_ENV === 'production', // Wajib pakai HTTPS
+      sameSite: process.env.SAMESITE, // Cukup untuk subdomain
+      domain: process.env.DOMAIN,
       maxAge: 8 * 60 * 60 * 1000, // 8 jam
     });
     
     res.cookie("refresh_token", refresh_token, { 
-      httpOnly: true,
-      secure: true,
-      sameSite: "Lax",
-      domain: ".syaad.dev",
+      httpOnly: process.env.HTTPONLY,
+      secure: process.env.NODE_ENV === 'production', // Wajib pakai HTTPS
+      sameSite: process.env.SAMESITE, // Cukup untuk subdomain
+      domain: process.env.DOMAIN,
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 hari
     })
     
-    res.redirect("https://snoorefi.syaad.dev");
+    res.redirect(process.env.COOKIE_URI);
 
   } catch (err) {
     res.status(err.status || 500).json({
