@@ -32,6 +32,10 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
+            if [ ! -d "/deploy/snoorefi/backend" ]; then
+              echo "Membuat folder /deploy/snoorefi/backend..."
+              mkdir -p /deploy/snoorefi/backend
+            fi
             cd /deploy/snoorefi/backend
 
             # Buat atau perbarui file .env di VPS dari GitHub Secrets
