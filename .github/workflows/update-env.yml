@@ -14,9 +14,9 @@ jobs:
       - name: Deploy to Server
         uses: appleboy/ssh-action@v0.1.10
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
           script: |
             cd /deploy/snoorefi/backend
             echo "${{ secrets.ENV_FILE }}" > .env
