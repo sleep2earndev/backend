@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 4000
 
 # Perintah untuk menjalankan backend
-CMD ["node", "server.js"]
+CMD ["node", "index.js"]
