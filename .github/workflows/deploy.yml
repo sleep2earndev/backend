@@ -50,6 +50,9 @@ jobs:
             # Buat atau perbarui file .env di VPS dari GitHub Secrets
             echo "${{ secrets.ENV_FILE }}" > .env
 
+            # Login ke GHCR agar bisa pull image
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
             # Restart backend dengan image terbaru
             docker-compose pull
             docker-compose up -d --remove-orphans
