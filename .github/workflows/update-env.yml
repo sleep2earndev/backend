@@ -20,4 +20,5 @@ jobs:
           script: |
             cd /deploy/snoorefi/backend
             echo "${{ secrets.ENV_FILE }}" > .env
-            docker-compose restart
+            docker-compose down
+            docker-compose up -d

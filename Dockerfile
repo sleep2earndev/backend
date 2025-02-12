@@ -16,5 +16,7 @@ COPY . .
 # Expose port aplikasi
 EXPOSE 4000
 
+ENV NODE_ENV=production
+
 # Perintah untuk menjalankan backend
 CMD ["node", "index.js"]
