@@ -19,11 +19,20 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/snoorefi-backend:latest .
+          docker build --pull -t ghcr.io/${{ github.repository_owner }}/snoorefi-backend:latest .
 
       - name: Push Docker image to GHCR
         run: |
           docker push ghcr.io/${{ github.repository_owner }}/snoorefi-backend:latest
+
+      - name: Move Docker Compose to VPS
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          source: "docker-compose.yml"
+          target: "/deploy/snoorefi/backend"
 
       - name: SSH to VPS & Deploy
         uses: appleboy/ssh-action@v0.1.7
@@ -43,4 +52,4 @@ jobs:
 
             # Restart backend dengan image terbaru
             docker-compose pull
-            docker-compose up -d
+            docker-compose up -d --remove-orphans
