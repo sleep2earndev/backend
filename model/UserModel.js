@@ -22,4 +22,23 @@ const authModel = async (code) => {
     };
 }
 
-module.exports = { authModel };
+const getProfile = async (token) => {
+    console.log('token profile:', token[1])
+    return axios.get(
+        'https://api.fitbit.com/1/user/-/profile.json',
+        {
+            headers: {
+                Authorization: `Bearer ${token[1]}`
+            }
+        }
+    ).then((res) => {
+        return res.data;
+    }).catch((error) => {
+        return {
+            message: "Request to Fitbit API failed",
+            error: error.response ? error.response.data : error.message,
+        }
+    })
+}
+
+module.exports = { authModel, getProfile };

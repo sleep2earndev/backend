@@ -8,7 +8,7 @@ const redirectURi = (req, res) => {
 }
 
 const auth = async (req, res) => {
-  
+
   try {
     const code = req.query.code
     if (!code) {
@@ -21,23 +21,23 @@ const auth = async (req, res) => {
     if (!access_token || !refresh_token) {
       throw new Error("Failed to retrieve tokens from Fitbit API");
     }
-    console.log('token:',access_token,'refresh:', refresh_token)
-    res.cookie("access_token", access_token, { 
+    console.log('token:', access_token, 'refresh:', refresh_token)
+    res.cookie("access_token", access_token, {
       httpOnly: process.env.HTTPONLY,
       secure: process.env.NODE_ENV === 'production', // Wajib pakai HTTPS
       sameSite: process.env.SAMESITE, // Cukup untuk subdomain
       domain: process.env.DOMAIN,
       maxAge: 8 * 60 * 60 * 1000, // 8 jam
     });
-    
-    res.cookie("refresh_token", refresh_token, { 
+
+    res.cookie("refresh_token", refresh_token, {
       httpOnly: process.env.HTTPONLY,
       secure: process.env.NODE_ENV === 'production', // Wajib pakai HTTPS
       sameSite: process.env.SAMESITE, // Cukup untuk subdomain
       domain: process.env.DOMAIN,
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 hari
     })
-    
+
     res.redirect(process.env.COOKIE_URI);
 
   } catch (err) {
@@ -48,4 +48,15 @@ const auth = async (req, res) => {
   }
 }
 
-module.exports = { auth, redirectURi };
+const getSleep = async (req, res) => {
+  try {
+    res.json(req.user).status(200)
+  } catch (err) {
+    res.status(err.status || 500).json({
+      message: err.message || "Something went wrong",
+      error: err.error || null
+    });
+  }
+}
+
+module.exports = { auth, redirectURi, getSleep };
