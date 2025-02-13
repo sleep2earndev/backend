@@ -51,7 +51,7 @@ const auth = async (req, res) => {
 const getSleep = async (req, res) => {
   const parameter= req.query
   try {
-    const token= req.headers['authorization'] ? req.headers['authorization'].split('Bearer ') : req.cookies.access_token;
+    const token= req.headers['authorization'] ? req.headers['authorization'].split('Bearer ')[1] : req.cookies.access_token;
     const result= await model.sleepLog(token,parameter)
     if(!result){
       res.status(401).json({

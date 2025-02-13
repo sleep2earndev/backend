@@ -1,7 +1,7 @@
 const model = require('../model/UserModel')
 const authMidlleware = async (req, res, next) => {
     try {
-        const authHeader = req.headers['authorization'] ? req.headers['authorization'].split('Bearer ') : req.cookies.access_token;
+        const authHeader = req.headers['authorization'] ? req.headers['authorization'].split('Bearer ')[1] : req.cookies.access_token;
         if (!authHeader) {
             return res
                 .status(401)

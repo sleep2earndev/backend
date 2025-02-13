@@ -23,12 +23,12 @@ const authModel = async (code) => {
 }
 
 const getProfile = async (token) => {
-    console.log('token profile:', token[1])
+    console.log('token profile:', token)
     return axios.get(
         'https://api.fitbit.com/1/user/-/profile.json',
         {
             headers: {
-                Authorization: `Bearer ${token[1]}`
+                Authorization: `Bearer ${token}`
             }
         }
     ).then((res) => {
@@ -42,7 +42,7 @@ const getProfile = async (token) => {
 }
 
 const sleepLog = async (token, parameter) => {
-    console.log('token profile:', token[1])
+    console.log('token profile:', token)
     const today = new Date();
     const year = today.getFullYear();
     const month = today.getMonth();
@@ -53,7 +53,7 @@ const sleepLog = async (token, parameter) => {
         'https://api.fitbit.com/1.2/user/-/sleep/list.json',
         {
             headers: {
-                Authorization: `Bearer ${token[1]}`,
+                Authorization: `Bearer ${token}`,
                 accept: 'application/json'
             },
             params: {
