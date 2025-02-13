@@ -21,7 +21,6 @@ const auth = async (req, res) => {
     if (!access_token || !refresh_token) {
       throw new Error("Failed to retrieve tokens from Fitbit API");
     }
-    console.log('token:', access_token, 'refresh:', refresh_token)
     res.cookie("access_token", access_token, {
       httpOnly: process.env.HTTPONLY,
       secure: process.env.NODE_ENV === 'production', // Wajib pakai HTTPS

@@ -23,7 +23,6 @@ const authModel = async (code) => {
 }
 
 const getProfile = async (token) => {
-    console.log('token profile:', token)
     return axios.get(
         'https://api.fitbit.com/1/user/-/profile.json',
         {
@@ -42,7 +41,6 @@ const getProfile = async (token) => {
 }
 
 const sleepLog = async (token, parameter) => {
-    console.log('token profile:', token)
     const today = new Date();
     const year = today.getFullYear();
     const month = today.getMonth();
