@@ -41,4 +41,37 @@ const getProfile = async (token) => {
     })
 }
 
-module.exports = { authModel, getProfile };
+const sleepLog = async (token, parameter) => {
+    console.log('token profile:', token[1])
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const date = today.getDate() + 1;
+
+    const beforeDate = `${year}-${month}-${date}`
+    console.log(formatDate)
+    return axios.get(
+        'https://api.fitbit.com/1.2/user/-/sleep/list.json',
+        {
+            headers: {
+                Authorization: `Bearer ${token[1]}`,
+                accept: 'application/json'
+            },
+            params: {
+                sort: parameter.sort,
+                limit: parameter.limit,
+                offset: parameter.offset,
+                beforeDate: beforeDate
+            }
+        }
+    ).then((res) => {
+        return res.data;
+    }).catch((error) => {
+        return {
+            message: "Request to Fitbit API failed",
+            error: error.response ? error.response.data : error.message,
+        }
+    })
+}
+
+module.exports = { authModel, getProfile, sleepLog };
