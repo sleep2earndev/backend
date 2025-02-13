@@ -49,7 +49,6 @@ const sleepLog = async (token, parameter) => {
     const date = today.getDate() + 1;
 
     const beforeDate = `${year}-${month}-${date}`
-    console.log(formatDate)
     return axios.get(
         'https://api.fitbit.com/1.2/user/-/sleep/list.json',
         {
