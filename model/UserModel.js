@@ -22,4 +22,53 @@ const authModel = async (code) => {
     };
 }
 
-module.exports = { authModel };
+const getProfile = async (token) => {
+    return axios.get(
+        'https://api.fitbit.com/1/user/-/profile.json',
+        {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }
+    ).then((res) => {
+        return res.data;
+    }).catch((error) => {
+        return {
+            message: "Request to Fitbit API failed",
+            error: error.response ? error.response.data : error.message,
+        }
+    })
+}
+
+const sleepLog = async (token, parameter) => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const date = today.getDate() + 1;
+
+    const beforeDate = `${year}-${month}-${date}`
+    return axios.get(
+        'https://api.fitbit.com/1.2/user/-/sleep/list.json',
+        {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                accept: 'application/json'
+            },
+            params: {
+                sort: parameter.sort,
+                limit: parameter.limit,
+                offset: parameter.offset,
+                beforeDate: beforeDate
+            }
+        }
+    ).then((res) => {
+        return res.data;
+    }).catch((error) => {
+        return {
+            message: "Request to Fitbit API failed",
+            error: error.response ? error.response.data : error.message,
+        }
+    })
+}
+
+module.exports = { authModel, getProfile, sleepLog };

@@ -5,7 +5,11 @@ npm i  # or npm install
 
 # 🚀 How to Run  
 ```sh
+Develompment fase:
 npm run serve
+
+Production fase:
+npm run start
 ```
 # Set up
 ```sh
