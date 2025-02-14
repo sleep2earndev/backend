@@ -1,4 +1,7 @@
 const axios = require('axios');
+const { ReclaimClient } = require('@reclaimprotocol/zk-fetch');
+const { transformForOnchain, verifyProof } = require('@reclaimprotocol/js-sdk');
+
 
 const authModel = async (code) => {
     try {
@@ -71,4 +74,55 @@ const sleepLog = async (token, parameter) => {
     })
 }
 
-module.exports = { authModel, getProfile, sleepLog };
+const generateProof = async (token) => {
+    const client = new ReclaimClient(process.env.ZK_APP_ID, process.env.ZK_SECRET, true);
+    const urlProfile = 'https://api.fitbit.com/1/user/-/profile.json';
+
+    const publicOptions = {
+        method: 'GET',
+        headers: {
+            accept: 'application/json'
+        }
+    };
+    const regexPattern = [
+        { type: 'regex', value: '"age"\\s*:\\s*"?(?<age>[^",}]*)"?' },
+        { type: 'regex', value: '"displayName"\\s*:\\s*"?(?<displayName>[^",}]*)"?' },
+        { type: 'regex', value: '"encodedId"\\s*:\\s*"?(?<encodedId>[^",}]*)"?' },
+        { type: 'regex', value: '"firstName"\\s*:\\s*"?(?<firstName>[^",}]*)"?' },
+        { type: 'regex', value: '"height"\\s*:\\s*"?(?<height>[^",}]*)"?' },
+        { type: 'regex', value: '"gender"\\s*:\\s*"?(?<gender>[^",}]*)"?' },
+        { type: 'regex', value: '"timezone"\\s*:\\s*"?(?<timezone>[^",}]*)"?' },
+        { type: 'regex', value: '"locale"\\s*:\\s*"?(?<locale>[^",}]*)"?' }
+    ]
+
+    const privateOptions = {
+        headers: {
+            Authorization: `Bearer ${token}`,
+            accept: 'application/json'
+        },
+        responseMatches: regexPattern
+    };
+
+    try {
+
+        const proofUser = await client.zkFetch(urlProfile, publicOptions, privateOptions);
+        
+        // console.log("Proof User Response:", proofUser);
+
+        const verifyProofUser = await verifyProof(proofUser);
+        if (!verifyProofUser) {
+            throw new Error('Proof verification failed');
+        }
+
+        
+        const proofUserData = transformForOnchain(proofUser);
+        
+        return { proofUserData };
+    } catch (error) {
+        console.error('Error generating proof:', error.message || error);
+        throw new Error('Failed to generate user proof');
+    }
+};
+
+
+module.exports = { authModel, getProfile, sleepLog, generateProof };
