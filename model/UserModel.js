@@ -136,8 +136,6 @@ const generateProof = async (token, parameter) => {
 
         // console.log("Proof User Response:", proofUser.extractedParameterValues);
         // console.log("Proof Sleep Log Response:", proofSleepLog);
-       
-
 
         const verifyProofUser = await verifyProof(proofUser);
         const verifyProofSleepLog = await verifyProof(proofSleepLog);
