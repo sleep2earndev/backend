@@ -69,12 +69,14 @@ const getSleep = async (req, res) => {
 }
 
 const proof= async(req,res)=>{
+  const parameter= req.query
   try{
     const token= req.headers['authorization'] ? req.headers['authorization'].split('Bearer ')[1] : req.cookies.access_token;
     if (!token) {
       return res.status(401).json({ message: 'Unauthorized: No token provided' });
   }
-    const result= await model.generateProof(token)
+  
+    const result= await model.generateProof(token, parameter)
     res.status(200).json(result)
   } catch (err) {
     res.status(err.status || 500).json({

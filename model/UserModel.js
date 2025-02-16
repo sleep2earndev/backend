@@ -46,7 +46,7 @@ const getProfile = async (token) => {
 const sleepLog = async (token, parameter) => {
     const today = new Date();
     const year = today.getFullYear();
-    const month = today.getMonth();
+    const month = today.getMonth()+1;
     const date = today.getDate() + 1;
 
     const beforeDate = `${year}-${month}-${date}`
@@ -74,9 +74,19 @@ const sleepLog = async (token, parameter) => {
     })
 }
 
-const generateProof = async (token) => {
+const generateProof = async (token, parameter) => {
     const client = new ReclaimClient(process.env.ZK_APP_ID, process.env.ZK_SECRET, true);
+
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth()+1;
+    const date = today.getDate() + 1;
+
+    const beforeDate = `${year}-${month}-${date}`;
+
     const urlProfile = 'https://api.fitbit.com/1/user/-/profile.json';
+    const urlSleepLog = `https://api.fitbit.com/1.2/user/-/sleep/list.json?sort=${parameter.sort}&limit=${parameter.limit}&offset=${parameter.offset}&beforeDate=${beforeDate}`;
+
 
     const publicOptions = {
         method: 'GET',
@@ -84,40 +94,62 @@ const generateProof = async (token) => {
             accept: 'application/json'
         }
     };
-    const regexPattern = [
-        { type: 'regex', value: '"age"\\s*:\\s*"?(?<age>[^",}]*)"?' },
-        { type: 'regex', value: '"displayName"\\s*:\\s*"?(?<displayName>[^",}]*)"?' },
-        { type: 'regex', value: '"encodedId"\\s*:\\s*"?(?<encodedId>[^",}]*)"?' },
-        { type: 'regex', value: '"firstName"\\s*:\\s*"?(?<firstName>[^",}]*)"?' },
-        { type: 'regex', value: '"height"\\s*:\\s*"?(?<height>[^",}]*)"?' },
-        { type: 'regex', value: '"gender"\\s*:\\s*"?(?<gender>[^",}]*)"?' },
-        { type: 'regex', value: '"timezone"\\s*:\\s*"?(?<timezone>[^",}]*)"?' },
-        { type: 'regex', value: '"locale"\\s*:\\s*"?(?<locale>[^",}]*)"?' }
-    ]
+
+    const regexPatternUser = [
+        { 
+            type: 'regex', 
+            value: '"displayName"\\s*:\\s*"?(?<displayName>[^",}]*)"?' 
+        },
+        { 
+            type: 'regex', 
+            value: '"fullName"\\s*:\\s*"?(?<fullName>[^",}]*)"?' 
+        }
+    ];
+
+    const regexPatternSleep = [
+        {
+            type: 'regex',
+            value: '"sleep"\\s*:\\s*\\[(?<sleep>.*?)\\]'
+        }
+    ];
+    
+    
 
     const privateOptions = {
         headers: {
             Authorization: `Bearer ${token}`,
             accept: 'application/json'
         },
-        responseMatches: regexPattern
+        responseMatches: regexPatternUser
+    };
+    const privateOptionsSleep = {
+        headers: {
+            Authorization: `Bearer ${token}`,
+            accept: 'application/json'
+        },
+        responseMatches: regexPatternSleep
     };
 
     try {
-
         const proofUser = await client.zkFetch(urlProfile, publicOptions, privateOptions);
-        
-        // console.log("Proof User Response:", proofUser);
+        const proofSleepLog = await client.zkFetch(urlSleepLog, publicOptions, privateOptionsSleep);
+
+        // console.log("Proof User Response:", proofUser.extractedParameterValues);
+        // console.log("Proof Sleep Log Response:", proofSleepLog);
+       
+
 
         const verifyProofUser = await verifyProof(proofUser);
-        if (!verifyProofUser) {
+        const verifyProofSleepLog = await verifyProof(proofSleepLog);
+
+        if (!verifyProofUser || !verifyProofSleepLog  ) {
             throw new Error('Proof verification failed');
         }
 
-        
         const proofUserData = transformForOnchain(proofUser);
-        
-        return { proofUserData };
+        const proofSleepLogData = transformForOnchain(proofSleepLog);
+
+        return { proofUserData, proofSleepLogData };
     } catch (error) {
         console.error('Error generating proof:', error.message || error);
         throw new Error('Failed to generate user proof');
