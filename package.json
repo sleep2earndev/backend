@@ -4,9 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "zk-files": "node node_modules/@reclaimprotocol/zk-symmetric-crypto/lib/scripts/download-files",
     "test": "test",
     "serve": "nodemon index.js",
-    "start":"node index.js"
+    "start": "node index.js"
   },
   "author": "Aryo wibisono",
   "license": "ISC",
@@ -14,6 +15,7 @@
     "@reclaimprotocol/attestor-core": "^4.0.0",
     "@reclaimprotocol/js-sdk": "^2.2.1",
     "@reclaimprotocol/zk-fetch": "^0.3.1",
+    "@reclaimprotocol/zk-symmetric-crypto": "^3.0.5",
     "axios": "^1.7.9",
     "body-parser": "^1.20.3",
     "cookie-parser": "^1.4.7",
