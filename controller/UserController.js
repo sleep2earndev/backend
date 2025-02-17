@@ -18,6 +18,7 @@ const auth = async (req, res) => {
     }
 
     const { access_token, refresh_token } = await model.authModel(code);
+    // console.log('token:', access_token)
     if (!access_token || !refresh_token) {
       throw new Error("Failed to retrieve tokens from Fitbit API");
     }
@@ -67,4 +68,21 @@ const getSleep = async (req, res) => {
   }
 }
 
-module.exports = { auth, redirectURi, getSleep };
+const proof= async(req,res)=>{
+  const parameter= req.query
+  try{
+    const token= req.headers['authorization'] ? req.headers['authorization'].split('Bearer ')[1] : req.cookies.access_token;
+    if (!token) {
+      return res.status(401).json({ message: 'Unauthorized: No token provided' });
+  }
+  
+    const result= await model.generateProof(token, parameter)
+    res.status(200).json(result)
+  } catch (err) {
+    res.status(err.status || 500).json({
+        message: err.message || 'Internal server error'
+    });
+}
+}
+
+module.exports = { auth, redirectURi, getSleep, proof };
