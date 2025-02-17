@@ -18,7 +18,7 @@ const auth = async (req, res) => {
     }
 
     const { access_token, refresh_token } = await model.authModel(code);
-    console.log('token:', access_token)
+    // console.log('token:', access_token)
     if (!access_token || !refresh_token) {
       throw new Error("Failed to retrieve tokens from Fitbit API");
     }
