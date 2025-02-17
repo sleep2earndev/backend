@@ -6,7 +6,7 @@ const controller = require('../controller/UserController');
 
 router.get('/auth/fitbit', controller.redirectURi);
 router.get('/auth/fitbit/callback', controller.auth);
-router.get('/get-sleep',midlleware.authMidlleware, controller.getSleep)
-router.get('/generateProof', midlleware.authMidlleware, controller.proof)
+router.get('/get_sleep',midlleware.authMidlleware, controller.getSleep)
+router.get('/generate_proof', midlleware.authMidlleware, controller.proof)
 
 module.exports = router;
