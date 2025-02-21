@@ -48,10 +48,8 @@ const token = async (req, res) => {
   }
 }
 
-const getSleep = async (req, res) => {
-  const parameter= req.query
+const getEarn = async (req, res) => {
   try {
-    // const token= req.headers['authorization'] ? req.headers['authorization'].split('Bearer ')[1] : req.cookies.access_token;
     const result= await model.sleepLog(req)
     if(!result){
       res.status(401).json({
@@ -69,9 +67,7 @@ const getSleep = async (req, res) => {
 }
 
 const getProfile = async (req, res) => {
-  const parameter= req.query
   try {
-    // const token= req.headers['authorization'] ? req.headers['authorization'].split('Bearer ')[1] : req.cookies.access_token;
     const result= await model.profile(req)
     if(!result){
       res.status(401).json({
@@ -88,22 +84,4 @@ const getProfile = async (req, res) => {
   }
 }
 
-// const proof= async(req,res)=>{
-//   const parameter= req.query
-//   try{
-//     const token= req.headers['authorization'] ? req.headers['authorization'].split('Bearer ')[1] : req.cookies.access_token;
-//     if (!token) {
-//       return res.status(401).json({ message: 'Unauthorized: No token provided' });
-//   }
-  
-//     const result= await model.generateProof(token, req.body.date)
-//     res.status(200).json(result)
-//   } catch (err) {
-//     res.status(err.status || 500).json({
-//         message: err.message || 'Internal server error'
-//     });
-// }
-// }
-
-// module.exports = { token, redirectURi, getSleep, proof,getProfile };
-module.exports = { token, redirectURi, getSleep,getProfile };
+module.exports = { token, redirectURi, getEarn,getProfile };
