@@ -151,7 +151,10 @@ const getRegexPatterns = () => ({
         { type: 'regex', value: '"avatar"\\s*:\\s*"?(?<avatar>[^",}]*)"?' }
     ],
     sleep: [
-        { type: 'regex', value: '"sleep"\\s*:\\s*\\[(?<sleep>.*?)\\]' }
+        { type: 'regex', value: '"dateOfSleep"\\s*:\\s*"?(?<dateOfSleep>[^",}]*)"?' },
+        { type: 'regex', value: '"duration"\\s*:\\s*"?(?<duration>[^",}]*)"?' },
+        { type: 'regex', value: '"endTime"\\s*:\\s*"?(?<endTime>[^",}]*)"?' },
+        { type: 'regex', value: '"levels"\\s*:\\s*{(?<levels>[^}]*)}' }
     ]
 });
 
@@ -163,6 +166,7 @@ const fetchAndVerifyProof = async (url, publicOpts, privateOpts) => {
         if (!isVerif) {
             throw new Error('Proof verification failed');
         }
+        // console.log("proof:", proof)
 
         return transformForOnchain(proof);
     } catch (error) {
@@ -194,18 +198,19 @@ const middlewareProof = async (req, res, next) => {
         let proofUserData = null;
         let proofSleepData = null;
 
-        if (!req.body.date && req.path === '/profile') {
+        if (!req.body.startDate || !req.body.endDate && req.path === '/profile') {
             proofUserData = await fetchAndVerifyProof(urlProfile, publicOptions, privateOptionsUser);
         }
 
-        if (req.body.date && req.path === '/get-sleep') {
-            const urlSleepDateLog = `https://api.fitbit.com/1.2/user/-/sleep/date/${req.body.date}.json`;
+        if (req.body.startDate && req.body.endDate  && req.path === '/get-sleep') {
+            const urlSleepDateLog = `https://api.fitbit.com/1.2/user/-/sleep/date/${req.body.startDate}/${req.body.endDate}.json`;
 
             proofUserData = await fetchAndVerifyProof(urlProfile, publicOptions, privateOptionsUser);
             proofSleepData = await fetchAndVerifyProof(urlSleepDateLog, publicOptions, privateOptionsSleep);
         }
 
         Object.assign(req, { proof: { proofUserData, proofSleepData } });
+        // console.log("req:", req.proof)
 
         return next();
     } catch (err) {
