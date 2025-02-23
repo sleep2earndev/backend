@@ -1,9 +1,9 @@
 const axios = require('axios');
-const { ReclaimClient } = require('@reclaimprotocol/zk-fetch');
-const { transformForOnchain, verifyProof } = require('@reclaimprotocol/js-sdk');
+const zktls = require('../utils/ZktlsPart')
 
+const command = require('../database/ConnectDb')
 
-const authModel = async (code) => {
+const generateToken = async (code) => {
     try {
         const response = await axios.post(
             'https://api.fitbit.com/oauth2/token',
@@ -24,135 +24,89 @@ const authModel = async (code) => {
         throw error;
     };
 }
-
-const getProfile = async (token) => {
-    return axios.get(
-        'https://api.fitbit.com/1/user/-/profile.json',
-        {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        }
-    ).then((res) => {
-        return res.data;
-    }).catch((error) => {
-        return {
-            message: "Request to Fitbit API failed",
-            error: error.response ? error.response.data : error.message,
-        }
-    })
-}
-
-const sleepLog = async (token, parameter) => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth()+1;
-    const date = today.getDate() + 1;
-
-    const beforeDate = `${year}-${month}-${date}`
-    return axios.get(
-        'https://api.fitbit.com/1.2/user/-/sleep/list.json',
-        {
-            headers: {
-                Authorization: `Bearer ${token}`,
-                accept: 'application/json'
-            },
-            params: {
-                sort: parameter.sort,
-                limit: parameter.limit,
-                offset: parameter.offset,
-                beforeDate: beforeDate
-            }
-        }
-    ).then((res) => {
-        return res.data;
-    }).catch((error) => {
-        return {
-            message: "Request to Fitbit API failed",
-            error: error.response ? error.response.data : error.message,
-        }
-    })
-}
-
-const generateProof = async (token, parameter) => {
-    const client = new ReclaimClient(process.env.ZK_APP_ID, process.env.ZK_SECRET, true);
-
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth()+1;
-    const date = today.getDate() + 1;
-
-    const beforeDate = `${year}-${month}-${date}`;
-
-    const urlProfile = 'https://api.fitbit.com/1/user/-/profile.json';
-    const urlSleepLog = `https://api.fitbit.com/1.2/user/-/sleep/list.json?sort=${parameter.sort}&limit=${parameter.limit}&offset=${parameter.offset}&beforeDate=${beforeDate}`;
-
-
-    const publicOptions = {
-        method: 'GET',
-        headers: {
-            accept: 'application/json'
-        }
-    };
-
-    const regexPatternUser = [
-        { 
-            type: 'regex', 
-            value: '"displayName"\\s*:\\s*"?(?<displayName>[^",}]*)"?' 
-        },
-        { 
-            type: 'regex', 
-            value: '"fullName"\\s*:\\s*"?(?<fullName>[^",}]*)"?' 
-        }
-    ];
-
-    const regexPatternSleep = [
-        {
-            type: 'regex',
-            value: '"sleep"\\s*:\\s*\\[(?<sleep>.*?)\\]'
-        }
-    ];
-    
-    
-
-    const privateOptions = {
-        headers: {
-            Authorization: `Bearer ${token}`,
-            accept: 'application/json'
-        },
-        responseMatches: regexPatternUser
-    };
-    const privateOptionsSleep = {
-        headers: {
-            Authorization: `Bearer ${token}`,
-            accept: 'application/json'
-        },
-        responseMatches: regexPatternSleep
-    };
-
+const sleepLog = async (req) => {
     try {
-        const proofUser = await client.zkFetch(urlProfile, publicOptions, privateOptions);
-        const proofSleepLog = await client.zkFetch(urlSleepLog, publicOptions, privateOptionsSleep);
+        const regexPatterns = zktls.getRegexPatterns();
+        const publicOptions = { method: 'GET', headers: { accept: 'application/json' } };
+        const privateOptionsSleep = {
+            headers: { Authorization: `${req.headers.authorization}`, accept: 'application/json' },
+            responseMatches: regexPatterns.sleep
+        };
 
-        // console.log("Proof User Response:", proofUser.extractedParameterValues);
-        // console.log("Proof Sleep Log Response:", proofSleepLog);
+        const urlSleepDateLog = `https://api.fitbit.com/1.2/user/-/sleep/date/${req.body.startDate}/${req.body.endDate}.json`;
+        const proofSleepData = await zktls.fetchAndVerifyProof(urlSleepDateLog, publicOptions, privateOptionsSleep);
 
-        const verifyProofUser = await verifyProof(proofUser);
-        const verifyProofSleepLog = await verifyProof(proofSleepLog);
+        // console.log("proofSleepData:", JSON.stringify(proofSleepData, null, 2)); // Debugging
 
-        if (!verifyProofUser || !verifyProofSleepLog  ) {
-            throw new Error('Proof verification failed');
+        if (!proofSleepData) {
+            throw new Error("Invalid proofSleepData: Missing claimInfo or context");
         }
 
-        const proofUserData = transformForOnchain(proofUser);
-        const proofSleepLogData = transformForOnchain(proofSleepLog);
+        let extractedParams = {};
+        try {
+            extractedParams = JSON.parse(proofSleepData.claimInfo.context).extractedParameters;
+        } catch (parseError) {
+            throw new Error("Error parsing extractedParameters: " + parseError.message);
+        }
 
-        return { proofUserData, proofSleepLogData };
+        if (!extractedParams.dateOfSleep || !extractedParams.duration || !extractedParams.endTime || !extractedParams.levels) {
+            throw new Error("Missing required sleep data in extractedParameters");
+        }
+
+        const userData = req.proof.proofUserData;
+        let userExtractedParams = {};
+        try {
+            userExtractedParams = JSON.parse(userData.claimInfo.context).extractedParameters;
+        } catch (parseError) {
+            throw new Error("Error parsing user extractedParameters: " + parseError.message);
+        }
+
+        const displayName = userExtractedParams.displayName || "Unknown User";
+        const fullName = userExtractedParams.fullName || "Unknown Full Name";
+        const avatar = userExtractedParams.avatar || "No Avatar";
+
+        const dateOfSleep = extractedParams.dateOfSleep;
+        const duration = parseInt(extractedParams.duration, 10);
+        const endTime = extractedParams.endTime;
+        const levels = JSON.stringify({ data: extractedParams.levels });
+
+        const claimInfoSleep = JSON.stringify(proofSleepData.claimInfo);
+        const signedClaimSleep = JSON.stringify(proofSleepData.signedClaim);
+
+        const insertUserQuery = `
+    INSERT INTO userSleep2earn (display_name, full_name, avatar, claim_info, signed_claim)
+    VALUES ($1, $2, $3, $4, $5)
+    ON CONFLICT (full_name) DO NOTHING;
+`;
+        await command.db.query(insertUserQuery, [displayName, fullName, avatar, claimInfoSleep, signedClaimSleep]);
+
+        const insertSleepQuery = `
+    INSERT INTO sleepData (user_full_name, date_of_sleep, duration, end_time, levels, claim_info, signed_claim)
+    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    ON CONFLICT (user_full_name, date_of_sleep) DO NOTHING RETURNING *;
+`;
+        await command.db.query(insertSleepQuery, [
+            fullName,
+            dateOfSleep,
+            duration,
+            endTime,
+            levels,
+            claimInfoSleep,
+            signedClaimSleep
+        ]);
+
+        return { success: true, user: userData, sleep: proofSleepData };
     } catch (error) {
-        console.error('Error generating proof:', error.message || error);
-        throw new Error('Failed to generate user proof');
+        console.error("Error inserting sleep data:", error);
+        return { success: false, error: error.message };
     }
 };
 
 
-module.exports = { authModel, getProfile, sleepLog, generateProof };
+
+
+const profile = async (data) => {
+    return data.proof.proofUserData
+}
+
+module.exports = { generateToken, sleepLog, profile };

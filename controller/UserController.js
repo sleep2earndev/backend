@@ -7,7 +7,7 @@ const redirectURi = (req, res) => {
   res.redirect(authUrl);
 }
 
-const auth = async (req, res) => {
+const token = async (req, res) => {
 
   try {
     const code = req.query.code
@@ -17,7 +17,7 @@ const auth = async (req, res) => {
       });
     }
 
-    const { access_token, refresh_token } = await model.authModel(code);
+    const { access_token, refresh_token } = await model.generateToken(code);
     // console.log('token:', access_token)
     if (!access_token || !refresh_token) {
       throw new Error("Failed to retrieve tokens from Fitbit API");
@@ -48,11 +48,9 @@ const auth = async (req, res) => {
   }
 }
 
-const getSleep = async (req, res) => {
-  const parameter= req.query
+const getEarn = async (req, res) => {
   try {
-    const token= req.headers['authorization'] ? req.headers['authorization'].split('Bearer ')[1] : req.cookies.access_token;
-    const result= await model.sleepLog(token,parameter)
+    const result= await model.sleepLog(req)
     if(!result){
       res.status(401).json({
         message:'your sleep log is not found'
@@ -68,21 +66,22 @@ const getSleep = async (req, res) => {
   }
 }
 
-const proof= async(req,res)=>{
-  const parameter= req.query
-  try{
-    const token= req.headers['authorization'] ? req.headers['authorization'].split('Bearer ')[1] : req.cookies.access_token;
-    if (!token) {
-      return res.status(401).json({ message: 'Unauthorized: No token provided' });
-  }
-  
-    const result= await model.generateProof(token, parameter)
+const getProfile = async (req, res) => {
+  try {
+    const result= await model.profile(req)
+    if(!result){
+      res.status(401).json({
+        message:'your profile not found'
+      })
+    }
+
     res.status(200).json(result)
   } catch (err) {
     res.status(err.status || 500).json({
-        message: err.message || 'Internal server error'
+      message: err.message || "Something went wrong",
+      error: err.error || null
     });
-}
+  }
 }
 
-module.exports = { auth, redirectURi, getSleep, proof };
+module.exports = { token, redirectURi, getEarn,getProfile };
