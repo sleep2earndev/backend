@@ -5,8 +5,8 @@ const midlleware= require('../middleware/AuthMiddleware.js')
 const controller = require('../controller/UserController');
 
 router.get('/auth/fitbit', controller.redirectURi);
-router.get('/auth/fitbit/callback', controller.auth);
-router.get('/get-sleep',midlleware.authMidlleware, controller.getSleep)
-router.get('/generate-proof', midlleware.authMidlleware, controller.proof)
+router.get('/auth/fitbit/callback', controller.token);
+router.get('/get-earn',midlleware.middlewareProofProfile, controller.getEarn)
+router.get('/profile',midlleware.middlewareProofProfile,controller.getProfile)
 
 module.exports = router;
