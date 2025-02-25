@@ -1,8 +1,8 @@
 const axios = require('axios');
 const zktls = require('../utils/ZktlsPart')
 require('dotenv').config();
-// const command = require('../database/ConnectDb')
-const {PrismaClient}= require('@prisma/client')
+const {PrismaClient}= require('@prisma/client');
+const { json } = require('body-parser');
 const prisma= new PrismaClient
 
 const generateToken = async (code) => {
@@ -44,34 +44,23 @@ const sleepLog = async (req) => {
             throw new Error("Invalid proofSleepData: Missing claimInfo or context");
         }
 
-        let sleepData = {};
-        try {
-            sleepData = JSON.parse(proofSleepData);
-        } catch (parseError) {
-            throw new Error("Error parsing sleep data: " + parseError.message);
-        }
-
+        let sleepData = proofSleepData;
+        // console.log("Type of proofSleepData:", typeof proofSleepData);
         if (!sleepData) {
             throw new Error("Missing required sleep data");
         }
 
         const dataUser = req.proof.proofUserData;
-        let  userData= {};
-        try {
-            userData = JSON.parse(dataUser);
-        } catch (parseError) {
-            throw new Error("Error parsing user datas: " + parseError.message);
-        }
 
-        const userOwner = userData.signedClaim.claim.owner || "Unknown User";
-        const fullName = userData.claimInfo.context.extractedParameters.fullName || "Unknown Full Name";
-        const userClaimInfo= JSON.stringify(userData.claimInfo);
+        const userOwner = dataUser.signedClaim.claim.owner || "Unknown User";
+        const fullName = JSON.parse(dataUser.claimInfo.context).extractedParameters.fullName || "Unknown Full Name";
+        const userClaimInfo= JSON.stringify(dataUser.claimInfo);
         // const userSignedClaim= JSON.stringify(userData.signedClaim);
         // const userSignatures= userData.signedClaim.claim.signatures;
 
-        const dateOfSleep = sleepData.dateOfSleep;
-        const duration = parseInt(sleepData.duration)/60000;
-        const endTime = sleepData.endTime;
+        const dateOfSleep = String(JSON.parse(sleepData.claimInfo.context).extractedParameters.dateOfSleep);
+        const duration = parseInt(JSON.parse(sleepData.claimInfo.context).extractedParameters.duration)/60000;
+        const endTime = JSON.parse(sleepData.claimInfo.context).extractedParameters.endTime;
         const sleepClaimInfo= JSON.stringify(sleepData.claimInfo);
         // const signedClaimSleep= JSON.stringify(sleepData.signedClaim);
         // const sleepSignatures= sleepData.signedClaim.claim.signatures;
@@ -94,7 +83,7 @@ const sleepLog = async (req) => {
         await prisma.sleepData.upsert({
             where:{
                 dateOfSleep:dateOfSleep,
-                duration:duration,
+                // duration:duration,
                 endTime:endTime
             },
             update:{},
@@ -108,41 +97,13 @@ const sleepLog = async (req) => {
                 ownersleep:sleepOwner
             }
         })
-        // const claimInfoSleep = JSON.stringify(proofSleepData.claimInfo);
-        // const signedClaimSleep = JSON.stringify(proofSleepData.signedClaim);
 
-
-
-//         const insertUserQuery = `
-//     INSERT INTO userSleep2earn (display_name, full_name, avatar, claim_info, signed_claim)
-//     VALUES ($1, $2, $3, $4, $5)
-//     ON CONFLICT (full_name) DO NOTHING;
-// `;
-//         await command.db.query(insertUserQuery, [displayName, fullName, avatar, claimInfoSleep, signedClaimSleep]);
-
-//         const insertSleepQuery = `
-//     INSERT INTO sleepData (user_full_name, date_of_sleep, duration, end_time, levels, claim_info, signed_claim)
-//     VALUES ($1, $2, $3, $4, $5, $6, $7)
-//     ON CONFLICT (user_full_name, date_of_sleep) DO NOTHING RETURNING *;
-// `;
-//         await command.db.query(insertSleepQuery, [
-//             fullName,
-//             dateOfSleep,
-//             duration,
-//             endTime,
-//             levels,
-//             claimInfoSleep,
-//             signedClaimSleep
-//         ]);
-
-        return { success: true, user: userData, sleep: proofSleepData };
+        return { success: true, user: dataUser, sleep: proofSleepData };
     } catch (error) {
         console.error("Error inserting sleep data:", error);
         return { success: false, error: error.message };
     }
 };
-
-
 
 
 const profile = async (data) => {

@@ -24,9 +24,9 @@ model UserApps{
 
 model SleepData{
   idSleep Int @unique @default(autoincrement())
-  dateOfSleep DateTime
+  dateOfSleep String @unique
   duration Int
-  endTime DateTime
+  endTime String @unique
   claimInfo Json
   // signedClaim Json
   // signatures String

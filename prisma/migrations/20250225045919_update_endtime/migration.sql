@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "SleepData" ALTER COLUMN "endTime" SET DATA TYPE TEXT;
