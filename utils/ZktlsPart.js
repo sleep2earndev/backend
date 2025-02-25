@@ -1,6 +1,6 @@
 const { ReclaimClient } = require('@reclaimprotocol/zk-fetch');
 const { transformForOnchain, verifyProof } = require('@reclaimprotocol/js-sdk');
-
+require('dotenv').config();
 const client = new ReclaimClient(process.env.ZK_APP_ID, process.env.ZK_SECRET, true);
 
 const getRegexPatterns = () => ({

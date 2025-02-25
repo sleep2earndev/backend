@@ -1,6 +1,6 @@
 const axios = require('axios');
 const zktls = require('../utils/ZktlsPart')
-
+require('dotenv').config();
 const generateToken = async (code) => {
     try {
         const response = await axios.post(

@@ -8,7 +8,6 @@ const redirectURi = (req, res) => {
 }
 
 const token = async (req, res) => {
-
   try {
     const code = req.query.code
     if (!code) {
