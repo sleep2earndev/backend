@@ -13,6 +13,9 @@ RUN npm ci --only=production
 # Copy seluruh source code ke dalam container
 COPY . .
 
+# Jalankan prisma generate untuk membuat Prisma Client
+RUN npx prisma generate
+
 # Expose port aplikasi
 EXPOSE 4000
 
