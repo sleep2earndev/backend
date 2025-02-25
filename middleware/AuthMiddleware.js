@@ -6,6 +6,7 @@ const middlewareProofProfile = async (req, res, next) => {
         if (!token) {
             return res.status(401).json({ message: "Invalid request or no token received" });
         }
+        // console.log('token:', token)
         const urlProfile = 'https://api.fitbit.com/1/user/-/profile.json';
 
         const regexPatterns = zktls.getRegexPatterns();
