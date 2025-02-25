@@ -1,7 +1,9 @@
 const axios = require('axios');
 const zktls = require('../utils/ZktlsPart')
-
-const command = require('../database/ConnectDb')
+require('dotenv').config();
+// const command = require('../database/ConnectDb')
+const {PrismaClient}= require('@prisma/client')
+const prisma= new PrismaClient
 
 const generateToken = async (code) => {
     try {
@@ -42,58 +44,96 @@ const sleepLog = async (req) => {
             throw new Error("Invalid proofSleepData: Missing claimInfo or context");
         }
 
-        let extractedParams = {};
+        let sleepData = {};
         try {
-            extractedParams = JSON.parse(proofSleepData.claimInfo.context).extractedParameters;
+            sleepData = JSON.parse(proofSleepData);
         } catch (parseError) {
-            throw new Error("Error parsing extractedParameters: " + parseError.message);
+            throw new Error("Error parsing sleep data: " + parseError.message);
         }
 
-        if (!extractedParams.dateOfSleep || !extractedParams.duration || !extractedParams.endTime || !extractedParams.levels) {
-            throw new Error("Missing required sleep data in extractedParameters");
+        if (!sleepData) {
+            throw new Error("Missing required sleep data");
         }
 
-        const userData = req.proof.proofUserData;
-        let userExtractedParams = {};
+        const dataUser = req.proof.proofUserData;
+        let  userData= {};
         try {
-            userExtractedParams = JSON.parse(userData.claimInfo.context).extractedParameters;
+            userData = JSON.parse(dataUser);
         } catch (parseError) {
-            throw new Error("Error parsing user extractedParameters: " + parseError.message);
+            throw new Error("Error parsing user datas: " + parseError.message);
         }
 
-        const displayName = userExtractedParams.displayName || "Unknown User";
-        const fullName = userExtractedParams.fullName || "Unknown Full Name";
-        const avatar = userExtractedParams.avatar || "No Avatar";
+        const userOwner = userData.signedClaim.claim.owner || "Unknown User";
+        const fullName = userData.claimInfo.context.extractedParameters.fullName || "Unknown Full Name";
+        const userClaimInfo= JSON.stringify(userData.claimInfo);
+        // const userSignedClaim= JSON.stringify(userData.signedClaim);
+        // const userSignatures= userData.signedClaim.claim.signatures;
 
-        const dateOfSleep = extractedParams.dateOfSleep;
-        const duration = parseInt(extractedParams.duration, 10);
-        const endTime = extractedParams.endTime;
-        const levels = JSON.stringify({ data: extractedParams.levels });
+        const dateOfSleep = sleepData.dateOfSleep;
+        const duration = parseInt(sleepData.duration)/60000;
+        const endTime = sleepData.endTime;
+        const sleepClaimInfo= JSON.stringify(sleepData.claimInfo);
+        // const signedClaimSleep= JSON.stringify(sleepData.signedClaim);
+        // const sleepSignatures= sleepData.signedClaim.claim.signatures;
+        const sleepOwner = sleepData.signedClaim.claim.owner || "Unknown sleep User";
 
-        const claimInfoSleep = JSON.stringify(proofSleepData.claimInfo);
-        const signedClaimSleep = JSON.stringify(proofSleepData.signedClaim);
+        await prisma.userApps.upsert({
+            where:{
+                owner:userOwner  //ini cari data ownernyanya dlu
+            },
+            update:{}, //jika ada ignore ae
+            create:{
+                owner:userOwner,
+                fullName:fullName,
+                claimInfo:userClaimInfo,
+                // signedClaim:userSignedClaim,
+                // signatures:userSignatures
+            }
 
-        const insertUserQuery = `
-    INSERT INTO userSleep2earn (display_name, full_name, avatar, claim_info, signed_claim)
-    VALUES ($1, $2, $3, $4, $5)
-    ON CONFLICT (full_name) DO NOTHING;
-`;
-        await command.db.query(insertUserQuery, [displayName, fullName, avatar, claimInfoSleep, signedClaimSleep]);
+        })
+        await prisma.sleepData.upsert({
+            where:{
+                dateOfSleep:dateOfSleep,
+                duration:duration,
+                endTime:endTime
+            },
+            update:{},
+            create:{
+                dateOfSleep:dateOfSleep,
+                duration:duration,
+                endTime:endTime,
+                claimInfo:sleepClaimInfo,
+                // signedClaim:signedClaimSleep,
+                // signatures:sleepSignatures,
+                ownersleep:sleepOwner
+            }
+        })
+        // const claimInfoSleep = JSON.stringify(proofSleepData.claimInfo);
+        // const signedClaimSleep = JSON.stringify(proofSleepData.signedClaim);
 
-        const insertSleepQuery = `
-    INSERT INTO sleepData (user_full_name, date_of_sleep, duration, end_time, levels, claim_info, signed_claim)
-    VALUES ($1, $2, $3, $4, $5, $6, $7)
-    ON CONFLICT (user_full_name, date_of_sleep) DO NOTHING RETURNING *;
-`;
-        await command.db.query(insertSleepQuery, [
-            fullName,
-            dateOfSleep,
-            duration,
-            endTime,
-            levels,
-            claimInfoSleep,
-            signedClaimSleep
-        ]);
+
+
+//         const insertUserQuery = `
+//     INSERT INTO userSleep2earn (display_name, full_name, avatar, claim_info, signed_claim)
+//     VALUES ($1, $2, $3, $4, $5)
+//     ON CONFLICT (full_name) DO NOTHING;
+// `;
+//         await command.db.query(insertUserQuery, [displayName, fullName, avatar, claimInfoSleep, signedClaimSleep]);
+
+//         const insertSleepQuery = `
+//     INSERT INTO sleepData (user_full_name, date_of_sleep, duration, end_time, levels, claim_info, signed_claim)
+//     VALUES ($1, $2, $3, $4, $5, $6, $7)
+//     ON CONFLICT (user_full_name, date_of_sleep) DO NOTHING RETURNING *;
+// `;
+//         await command.db.query(insertSleepQuery, [
+//             fullName,
+//             dateOfSleep,
+//             duration,
+//             endTime,
+//             levels,
+//             claimInfoSleep,
+//             signedClaimSleep
+//         ]);
 
         return { success: true, user: userData, sleep: proofSleepData };
     } catch (error) {

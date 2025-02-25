@@ -12,6 +12,7 @@
   "author": "Aryo wibisono",
   "license": "ISC",
   "dependencies": {
+    "@prisma/client": "^6.4.1",
     "@reclaimprotocol/attestor-core": "^4.0.0",
     "@reclaimprotocol/js-sdk": "^2.2.1",
     "@reclaimprotocol/zk-fetch": "^0.3.1",
@@ -25,6 +26,7 @@
     "pg-promise": "^11.10.2"
   },
   "devDependencies": {
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.9",
+    "prisma": "^6.4.1"
   }
 }
