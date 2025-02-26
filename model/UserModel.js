@@ -152,10 +152,12 @@ const sleepLog2 = async (req) => {
         // const signedClaimSleep= JSON.stringify(sleepData.signedClaim);
         // const sleepSignatures= sleepData.signedClaim.claim.signatures;
         const sleepOwner = sleepData.signedClaim.claim.owner || "Unknown sleep User";
-        let countEarn= Math.round(duration*1)
+        const earnHours= Number(process.env.EARN_HOUR)
+        let countEarn= Math.round(duration*earnHours)
         let earn;
-        if(countEarn > process.env.MAX_EARNING){
-            earn= process.env.MAX_EARNING
+        const maxEarn= Number(process.env.MAX_EARNING)
+        if(countEarn > maxEarn){
+            earn= maxEarn
         }else{
             earn= countEarn
         }
