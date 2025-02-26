@@ -41,31 +41,31 @@ const token = async (req, res) => {
     });
 
     // ini pas production aja
-    // res.cookie("call", user_id, {
-    //   httpOnly: process.env.HTTPONLY,
-    //   secure: process.env.NODE_ENV === 'production', // Wajib pakai HTTPS
-    //   sameSite: process.env.SAMESITE, // Cukup untuk subdomain
-    //   domain: process.env.DOMAIN,
-    //   maxAge: 8 * 60 * 60 * 1000, // 8 jam
-    // });
+    res.cookie("call", user_id, {
+      httpOnly: process.env.HTTPONLY,
+      secure: process.env.NODE_ENV === 'production', // Wajib pakai HTTPS
+      sameSite: process.env.SAMESITE, // Cukup untuk subdomain
+      domain: process.env.DOMAIN,
+      maxAge: 8 * 60 * 60 * 1000, // 8 jam
+    });
 
 
     //ini buat pas tes local
-    res.cookie("call", user_id, {
-      httpOnly: false,
-      secure: false, // Gunakan HTTPS hanya di produksi
-      sameSite: process.env.SAMESITE,
-      // domain: process.env.NODE_ENV === 'production' ? process.env.DOMAIN : undefined,
-      maxAge: 8 * 60 * 60 * 1000, // 8 jam
-    });
+    // res.cookie("call", user_id, {
+    //   httpOnly: false,
+    //   secure: false, // Gunakan HTTPS hanya di produksi
+    //   sameSite: process.env.SAMESITE,
+    //   // domain: process.env.NODE_ENV === 'production' ? process.env.DOMAIN : undefined,
+    //   maxAge: 8 * 60 * 60 * 1000, // 8 jam
+    // });
     
-    res.cookie("tokenLocal", access_token, {
-      httpOnly: false,
-      secure: false, // Gunakan HTTPS hanya di produksi
-      sameSite: process.env.SAMESITE,
-      // domain: process.env.NODE_ENV === 'production' ? process.env.DOMAIN : undefined,
-      maxAge: 8 * 60 * 60 * 1000, // 8 jam
-    });
+    // res.cookie("tokenLocal", access_token, {
+    //   httpOnly: false,
+    //   secure: false, // Gunakan HTTPS hanya di produksi
+    //   sameSite: process.env.SAMESITE,
+    //   // domain: process.env.NODE_ENV === 'production' ? process.env.DOMAIN : undefined,
+    //   maxAge: 8 * 60 * 60 * 1000, // 8 jam
+    // });
 
     res.cookie("refresh_token", refresh_token, {
       httpOnly: process.env.HTTPONLY,
@@ -75,10 +75,10 @@ const token = async (req, res) => {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 hari
     })
 
-    // res.redirect(process.env.COOKIE_URI);
+    res.redirect(process.env.COOKIE_URI);
 
     //ini buat cookies local
-    res.redirect('http://localhost:4000/userID ')
+    // res.redirect('http://localhost:4000/userID ')
   } catch (err) {
     res.status(err.status || 500).json({
       message: err.message || "Something went wrong",
