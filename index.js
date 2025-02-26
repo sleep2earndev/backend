@@ -6,7 +6,7 @@ const cookieParser = require('cookie-parser')
 const cors= require('cors');
 
 const corsOptions = {
-    origin: "https://snoorefi.syaad.dev", 
+    origin: process.env.ALLOWED_CORS?.split(',') || '', 
     credentials: true, // Wajib untuk mengizinkan cookie
   }
 app.use(cookieParser())
