@@ -13,7 +13,9 @@ const getRegexPatterns = () => ({
         { type: 'regex', value: '"dateOfSleep"\\s*:\\s*"?(?<dateOfSleep>[^",}]*)"?' },
         { type: 'regex', value: '"duration"\\s*:\\s*"?(?<duration>[^",}]*)"?' },
         { type: 'regex', value: '"endTime"\\s*:\\s*"?(?<endTime>[^",}]*)"?' },
-        { type: 'regex', value: '"levels"\\s*:\\s*{(?<levels>[^}]*)}' }
+        { type: 'regex', value: '"levels"\\s*:\\s*(?<levels>\{(?:[^{}]|"(?:\\.|[^"])*"|\{(?:[^{}]|"(?:\\.|[^"])*")*\})*\})' },
+        { type: 'regex', value: '"summary"\\s*:\\s*(?<summary>\{(?:[^{}]|"(?:\\.|[^"])*"|\{(?:[^{}]|"(?:\\.|[^"])*")*\})*\})' },
+        { type: 'regex', value: '"startTime"\\s*:\\s*"?(?<startTime>[^",}]*)"?' }
     ]
 });
 
