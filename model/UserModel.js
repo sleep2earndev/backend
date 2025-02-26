@@ -59,45 +59,77 @@ const sleepLog = async (req) => {
         // const userSignedClaim= JSON.stringify(userData.signedClaim);
         // const userSignatures= userData.signedClaim.claim.signatures;
 
-        const dateOfSleep = String(JSON.parse(sleepData.claimInfo.context).extractedParameters.dateOfSleep);
-        const duration = parseInt(JSON.parse(sleepData.claimInfo.context).extractedParameters.duration) / 60000;
+        const startTime = String(JSON.parse(sleepData.claimInfo.context).extractedParameters.startTime);
+        const duration = parseInt(JSON.parse(sleepData.claimInfo.context).extractedParameters.duration) / 3600000;
         const endTime = JSON.parse(sleepData.claimInfo.context).extractedParameters.endTime;
         const sleepClaimInfo = JSON.stringify(sleepData.claimInfo);
+        const summary = String(JSON.parse(sleepData.claimInfo.context).extractedParameters.summary)
+        const dateOfSleep = String(JSON.parse(sleepData.claimInfo.context).extractedParameters.dateOfSleep);
         // const signedClaimSleep= JSON.stringify(sleepData.signedClaim);
         // const sleepSignatures= sleepData.signedClaim.claim.signatures;
         const sleepOwner = sleepData.signedClaim.claim.owner || "Unknown sleep User";
+        // const earnHours = Number(process.env.EARN_HOUR)
+        // let countEarn = Math.round(duration * earnHours)
+        // let earn;
+        // const maxEarn = Number(process.env.MAX_EARNING)
+        // if (countEarn > maxEarn) {
+        //     earn = maxEarn
+        // } else {
+        //     earn = countEarn
+        // }
+        await prisma.userApps.upsert({
+            where: {
+                owner: userOwner  //ini cari data ownernyanya dlu
+            },
+            update: {}, //jika ada ignore ae
+            create: {
+                owner: userOwner,
+                fullName: fullName,
+                claimInfo: userClaimInfo,
+                // signedClaim:userSignedClaim,
+                // signatures:userSignatures
+            }
 
-        // await prisma.userApps.upsert({
-        //     where:{
-        //         owner:userOwner  //ini cari data ownernyanya dlu
-        //     },
-        //     update:{}, //jika ada ignore ae
-        //     create:{
-        //         owner:userOwner,
-        //         fullName:fullName,
-        //         claimInfo:userClaimInfo,
-        //         // signedClaim:userSignedClaim,
-        //         // signatures:userSignatures
-        //     }
+        })
+        // console.log("Req ID before insert:", req.user.user_id);
 
-        // })
-        // await prisma.sleepData.upsert({
-        //     where:{
-        //         dateOfSleep:dateOfSleep,
-        //         // duration:duration,
-        //         endTime:endTime
-        //     },
-        //     update:{},
-        //     create:{
-        //         dateOfSleep:dateOfSleep,
-        //         duration:duration,
-        //         endTime:endTime,
-        //         claimInfo:sleepClaimInfo,
-        //         // signedClaim:signedClaimSleep,
-        //         // signatures:sleepSignatures,
-        //         ownersleep:sleepOwner
-        //     }
-        // })
+        await prisma.sleepData.upsert({
+            where: {
+                startTime: startTime,
+                // duration:duration,
+                endTime: endTime
+            },
+            update: {},
+            create: {
+                dateOfSleep: dateOfSleep,
+                startTime: startTime,
+                summary: summary,
+                version: "ONE",
+                userId: req.user.user_id,
+                duration: duration,
+                endTime: endTime,
+                claimInfo: sleepClaimInfo,
+                // signedClaim:signedClaimSleep,
+                // signatures:sleepSignatures,
+                ownersleep: sleepOwner
+                // earning: earn
+            }
+        })
+
+        await prisma.totalEarning.upsert({
+            where: {
+                userId: req.user.user_id
+            },
+            update: {
+                totalEarn: {
+                    increment: earn
+                }
+            },
+            create: {
+                userId: req.user.user_id,
+                totalEarn: earn
+            }
+        })
 
         return { success: true, user: dataUser, sleep: proofSleepData };
     } catch (error) {
