@@ -209,14 +209,31 @@ const sleepLog2 = async (req) => {
         })
         console.log("Req ID before insert:", req.user.user_id);
 
-        await prisma.sleepData.upsert({
-            where: {
-                startTime: startTime,
-                // duration:duration,
-                endTime: endTime
-            },
-            update: {},
-            create: {
+        // await prisma.sleepData.upsert({
+        //     // where: {
+        //     //     // startTime: startTime,
+        //     //     // // duration:duration,
+        //     //     // endTime: endTime
+                
+        //     // },
+        //     // update: {},
+        //     create: {
+        //         dateOfSleep: dateOfSleep,
+        //         startTime: startTime,
+        //         summary: summary,
+        //         version: "TWO",
+        //         userId: req.user.user_id,
+        //         duration: duration,
+        //         endTime: endTime,
+        //         claimInfo: sleepClaimInfo,
+        //         // signedClaim:signedClaimSleep,
+        //         // signatures:sleepSignatures,
+        //         ownersleep: sleepOwner,
+        //         earning: earn
+        //     }
+        // })
+        await prisma.sleepData.create({
+            data: {
                 dateOfSleep: dateOfSleep,
                 startTime: startTime,
                 summary: summary,
@@ -225,12 +242,11 @@ const sleepLog2 = async (req) => {
                 duration: duration,
                 endTime: endTime,
                 claimInfo: sleepClaimInfo,
-                // signedClaim:signedClaimSleep,
-                // signatures:sleepSignatures,
                 ownersleep: sleepOwner,
                 earning: earn
             }
-        })
+        });
+        
 
         await prisma.totalEarning.upsert({
             where: {
@@ -243,7 +259,8 @@ const sleepLog2 = async (req) => {
             },
             create: {
                 userId: req.user.user_id,
-                totalEarn: earn
+                totalEarn: earn,
+                fullName:fullName
             }
         })
 
@@ -257,4 +274,19 @@ const sleepLog2 = async (req) => {
         return { success: false, error: error.message };
     }
 };
-module.exports = { generateToken, sleepLog, profile, sleepLog2 };
+
+const leaderboard= async()=>{
+    try{
+        const data= await prisma.totalEarning.findMany({
+            take:10,
+            orderBy:{
+                totalEarn:'desc'
+            }
+        })
+        return data;
+    }catch(error){
+        console.error("Error get data leaderboard:", error);
+        return { success: false, error: error.message };
+    }
+}
+module.exports = { generateToken, sleepLog, profile, sleepLog2,leaderboard };
