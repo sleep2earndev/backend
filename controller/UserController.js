@@ -141,4 +141,22 @@ const getProfile = async (req, res) => {
   }
 }
 
-module.exports = { token, redirectURi, getEarn, getProfile, getEarn2 };
+const leaderboard= async(req, res)=>{
+  try{
+    const result = await model.leaderboard()
+    if(!result){
+      res.status(401).json({
+        message: 'leaderboard not found'
+      })
+    }
+
+    res.status(200).json(result);
+  }catch(err){
+    res.status(err.status || 500).json({
+      message: err.message || "Something went wrong",
+      error: err.error || null
+    });
+  }
+}
+
+module.exports = { token, redirectURi, getEarn, getProfile, getEarn2, leaderboard };

@@ -30,9 +30,9 @@ model SleepData{
   idSleep Int @unique @default(autoincrement())
   dateOfSleep String 
   duration Int
-  endTime String @unique
+  endTime String 
   claimInfo Json
-  startTime String @unique
+  startTime String 
   summary Json
   version version
   // signedClaim Json
@@ -45,6 +45,6 @@ model SleepData{
 
 model totalEarning{
   userId String @unique @id
+  fullName String
   totalEarn Int
 }
-
