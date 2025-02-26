@@ -1,4 +1,5 @@
-const zktls= require('../utils/ZktlsPart')
+const zktls = require('../utils/ZktlsPart')
+// const{user_id} = require('../controller/UserController')
 
 const middlewareProofProfile = async (req, res, next) => {
     try {
@@ -18,8 +19,16 @@ const middlewareProofProfile = async (req, res, next) => {
         };
 
         let proofUserData = await zktls.fetchAndVerifyProof(urlProfile, publicOptions, privateOptionsUser);
-       
+
         Object.assign(req, { proof: { proofUserData } });
+        const user_id = req.cookies.call;
+        // console.log("Raw Cookies:", req.headers.cookie);
+        // console.log("Parsed Cookies:", req.cookies);
+        // console.log("User ID dari cookie:", req.cookies.call);
+
+
+        Object.assign(req, { user: { user_id } });
+        // console.log("id:",req.user)
         return next();
     } catch (err) {
         console.error("Error in middlewareProof:", err.message || err);

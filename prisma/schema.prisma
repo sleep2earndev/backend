@@ -13,6 +13,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum version{
+  ONE
+  TWO
+}
 model UserApps{
   owner String @unique @id
   fullName String
@@ -24,15 +28,23 @@ model UserApps{
 
 model SleepData{
   idSleep Int @unique @default(autoincrement())
-  dateOfSleep String @unique
+  dateOfSleep String 
   duration Int
   endTime String @unique
   claimInfo Json
+  startTime String @unique
+  summary Json
+  version version
   // signedClaim Json
   // signatures String
   ownersleep String
   ownerRef UserApps @relation(fields: [ownersleep],references: [owner], onDelete: Cascade, onUpdate: Cascade)
+  userId String
+  earning Int?
 }
 
-
+model totalEarning{
+  userId String @unique @id
+  totalEarn Int
+}
 
