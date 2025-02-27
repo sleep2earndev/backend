@@ -185,7 +185,7 @@ const sleepLog2 = async (req) => {
         // const sleepSignatures= sleepData.signedClaim.claim.signatures;
         const sleepOwner = sleepData.signedClaim.claim.owner || "Unknown sleep User";
         const earnHours = Number(process.env.EARN_HOUR)
-        let countEarn = Math.round(duration * earnHours)
+        let countEarn = duration * earnHours
         let earn;
         const maxEarn = Number(process.env.MAX_EARNING)
         if (countEarn > maxEarn) {
@@ -290,3 +290,4 @@ const leaderboard= async()=>{
     }
 }
 module.exports = { generateToken, sleepLog, profile, sleepLog2,leaderboard };
+
