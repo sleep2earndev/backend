@@ -30,9 +30,10 @@ const generateToken = async (code) => {
 const sleepLog = async (req) => {
     try {
         const regexPatterns = zktls.getRegexPatterns();
+        const token = req.headers['authorization'] ? req.headers['authorization'].split('Bearer ')[1] : req.cookies.access_token;
         const publicOptions = { method: 'GET', headers: { accept: 'application/json' } };
         const privateOptionsSleep = {
-            headers: { Authorization: `${req.headers.authorization}`, accept: 'application/json' },
+            headers: { Authorization: `Bearer ${token}`, accept: 'application/json' },
             responseMatches: regexPatterns.sleep
         };
 
@@ -147,8 +148,9 @@ const sleepLog2 = async (req) => {
     try {
         const regexPatterns = zktls.getRegexPatterns();
         const publicOptions = { method: 'GET', headers: { accept: 'application/json' } };
+        const token = req.headers['authorization'] ? req.headers['authorization'].split('Bearer ')[1] : req.cookies.access_token;
         const privateOptionsSleep = {
-            headers: { Authorization: `${req.headers.authorization}`, accept: 'application/json' },
+            headers: { Authorization: `Bearer ${token}`, accept: 'application/json' },
             responseMatches: regexPatterns.sleep
         };
 
