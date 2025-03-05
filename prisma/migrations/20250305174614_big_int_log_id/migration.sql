@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "SleepData" ALTER COLUMN "logId" SET DATA TYPE BIGINT;

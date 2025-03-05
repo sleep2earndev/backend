@@ -15,7 +15,8 @@ const getRegexPatterns = () => ({
         { type: 'regex', value: '"endTime"\\s*:\\s*"?(?<endTime>[^",}]*)"?' },
         { type: 'regex', value: '"levels"\\s*:\\s*(?<levels>\{(?:[^{}]|"(?:\\.|[^"])*"|\{(?:[^{}]|"(?:\\.|[^"])*")*\})*\})' },
         { type: 'regex', value: '"summary"\\s*:\\s*(?<summary>\{(?:[^{}]|"(?:\\.|[^"])*"|\{(?:[^{}]|"(?:\\.|[^"])*")*\})*\})' },
-        { type: 'regex', value: '"startTime"\\s*:\\s*"?(?<startTime>[^",}]*)"?' }
+        { type: 'regex', value: '"startTime"\\s*:\\s*"?(?<startTime>[^",}]*)"?' },
+        { "type": "regex", "value": "\"logId\"\\s*:\\s*(?<logId>\\d+)" }
     ]
 });
 
