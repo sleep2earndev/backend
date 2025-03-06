@@ -158,43 +158,70 @@ const sleepLog2 = async (req) => {
         };
 
         const urlSleepDateLog = `https://api.fitbit.com/1.2/user/-/sleep/date/${req.body.startDate}/${req.body.endDate}.json`;
-        const proofSleepData = await zktls.fetchAndVerifyProof(urlSleepDateLog, publicOptions, privateOptionsSleep);
-
-        // console.log("proofSleepData:", JSON.stringify(proofSleepData, null, 2)); // Debugging
+        let proofSleepData = await zktls.fetchAndVerifyProof(urlSleepDateLog, publicOptions, privateOptionsSleep);
 
         if (!proofSleepData) {
             throw new Error("Invalid proofSleepData: Missing claimInfo or context");
         }
 
         let sleepData = proofSleepData;
-        // console.log("Type of proofSleepData:", typeof proofSleepData);
+        // console.log("sleep extract:", sleepData)
+        
         if (!sleepData) {
             throw new Error("Missing required sleep data");
         }
 
         const dataUser = req.proof.proofUserData;
 
-        const userOwner = dataUser.signedClaim.claim.owner || "Unknown User";
+        // const userOwner = dataUser.signedClaim.claim.owner || "Unknown User";
         const fullName = JSON.parse(dataUser.claimInfo.context).extractedParameters.fullName || "Unknown Full Name";
         const userClaimInfo = JSON.stringify(dataUser.claimInfo);
         // const userSignedClaim= JSON.stringify(userData.signedClaim);
         // const userSignatures= userData.signedClaim.claim.signatures;
 
-        const startTime = String(JSON.parse(sleepData.claimInfo.context).extractedParameters.startTime);
-        const formatStartTime = moment(startTime).format("HH:mm");
-        const duration = parseInt(JSON.parse(sleepData.claimInfo.context).extractedParameters.duration) / 3600000;
+        const extractedParameters = JSON.parse(sleepData.claimInfo.context).extractedParameters;
+
+        const sleepArray = JSON.parse(extractedParameters.sleep); // Perbaikan: Parse lagi ke array
+
+        // console.log("Parsed sleep data:", sleepArray); // Debugging
+
+        const sleepResponse = Array.isArray(sleepArray) ? sleepArray : [sleepArray];
+
+
+        const response = sleepResponse
+            .filter(data => data.startTime && data.endTime)
+            .sort((a, b) => new Date(b.startTime) - new Date(a.startTime)); // Urutkan berdasarkan waktu terbaru
+
+        const newResponse = response[0];
+
+        // console.log("Data sleep terbaru:", newResponse);
+
+        const formatStartTime = moment(newResponse.startTime).format("HH:mm");
+        const duration = newResponse.duration / 3600000;
         
-        const endTime = JSON.parse(sleepData.claimInfo.context).extractedParameters.endTime;
-        const formatEndTime = moment(endTime).format("HH:mm");
+        const formatEndTime = moment(newResponse.endTime).format("HH:mm");
         const sleepClaimInfo = JSON.stringify(sleepData.claimInfo);
         const summary = String(JSON.parse(sleepData.claimInfo.context).extractedParameters.summary)
-        const dateOfSleep = String(JSON.parse(sleepData.claimInfo.context).extractedParameters.dateOfSleep);
+        const dateOfSleep = newResponse.dateOfSleep;
         // const signedClaimSleep= JSON.stringify(sleepData.signedClaim);
         // const sleepSignatures= sleepData.signedClaim.claim.signatures;
-        const logId = BigInt(JSON.parse(sleepData.claimInfo.context).extractedParameters.logId)
-        
+        const logId = BigInt(newResponse.logId)
         const sleepOwner = sleepData.signedClaim.claim.owner || "Unknown sleep User";
         
+        const isValidJson = (str) => {
+            try {
+                JSON.parse(str);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        };
+
+        if (isValidJson(JSON.stringify(newResponse))) {
+            sleepData.claimInfo.context = newResponse;
+        } else {
+            throw new Error("Invalid JSON format for newResponse");
+        }
 
         if(formatStartTime === req.body.startTime && formatEndTime === req.body.endTime){
             const existingLog = await prisma.sleepData.findUnique({
@@ -229,7 +256,7 @@ const sleepLog2 = async (req) => {
             }
 
 
-            console.log("Req ID before insert:", req.user.user_id);
+            // console.log("Req ID before insert:", req.user.user_id);
 
 
             const earnHours = Number(process.env.EARN_HOUR)
@@ -290,8 +317,6 @@ const sleepLog2 = async (req) => {
                 message:"invalid request"
             }
         }
-
-        
     } catch (error) {
         console.error("Error inserting sleep data:", error);
         return { success: false, error: error.message };

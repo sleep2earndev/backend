@@ -10,13 +10,14 @@ const getRegexPatterns = () => ({
         { type: 'regex', value: '"avatar"\\s*:\\s*"?(?<avatar>[^",}]*)"?' }
     ],
     sleep: [
-        { type: 'regex', value: '"dateOfSleep"\\s*:\\s*"?(?<dateOfSleep>[^",}]*)"?' },
-        { type: 'regex', value: '"duration"\\s*:\\s*"?(?<duration>[^",}]*)"?' },
-        { type: 'regex', value: '"endTime"\\s*:\\s*"?(?<endTime>[^",}]*)"?' },
-        { "type": "regex", "value": "\"levels\"\\s*:\\s*(?<levels>\\{.*?\\})" },
-        { type: 'regex', value: '"summary"\\s*:\\s*(?<summary>\{(?:[^{}]|"(?:\\.|[^"])*"|\{(?:[^{}]|"(?:\\.|[^"])*")*\})*\})' },
-        { type: 'regex', value: '"startTime"\\s*:\\s*"?(?<startTime>[^",}]*)"?' },
-        { "type": "regex", "value": "\"logId\"\\s*:\\s*(?<logId>\\d+)" }
+        { "type": "regex", "value": "\"sleep\"\\s*:\\s*(?<sleep>\\[.*\\])" }
+        // { type: 'regex', value: '"dateOfSleep"\\s*:\\s*"?(?<dateOfSleep>[^",}]*)"?' },
+        // { type: 'regex', value: '"duration"\\s*:\\s*"?(?<duration>[^",}]*)"?' },
+        // { type: 'regex', value: '"endTime"\\s*:\\s*"?(?<endTime>[^",}]*)"?' },
+        // { "type": "regex", "value": "\"levels\"\\s*:\\s*(?<levels>\\{.*?\\})" },
+        // { type: 'regex', value: '"summary"\\s*:\\s*(?<summary>\{(?:[^{}]|"(?:\\.|[^"])*"|\{(?:[^{}]|"(?:\\.|[^"])*")*\})*\})' },
+        // { type: 'regex', value: '"startTime"\\s*:\\s*"?(?<startTime>[^",}]*)"?' },
+        // { "type": "regex", "value": "\"logId\"\\s*:\\s*(?<logId>\\d+)" }
     ]
 });
 
@@ -28,7 +29,9 @@ const fetchAndVerifyProof = async (url, publicOpts, privateOpts) => {
         if (!isVerif) {
             throw new Error('Proof verification failed');
         }
-        // console.log("proof:", proof)
+        // const sleepData = proof.extractedParameterValues.sleep;
+        // console.log("Full Sleep Data:", sleepData);
+
 
         return transformForOnchain(proof);
     } catch (error) {
