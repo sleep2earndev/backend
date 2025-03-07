@@ -2,8 +2,8 @@ version: "3"
 
 services:
   backend:
-    image: ghcr.io/sleep2earndev/snoorefi-backend:latest
-    container_name: snoorefi-backend
+    image: ghcr.io/sleep2earndev/napnad-backend:latest
+    container_name: napnad-backend
     restart: always
     env_file:
       - .env
