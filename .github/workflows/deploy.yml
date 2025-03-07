@@ -19,11 +19,11 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build --pull -t ghcr.io/${{ github.repository_owner }}/snoorefi-backend:latest .
+          docker build --pull -t ghcr.io/${{ github.repository_owner }}/napnad-backend:latest .
 
       - name: Push Docker image to GHCR
         run: |
-          docker push ghcr.io/${{ github.repository_owner }}/snoorefi-backend:latest
+          docker push ghcr.io/${{ github.repository_owner }}/napnad-backend:latest
 
       - name: Move Docker Compose to VPS
         uses: appleboy/scp-action@v0.1.4
@@ -32,7 +32,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           source: "docker-compose.yml"
-          target: "/deploy/snoorefi/backend"
+          target: "/deploy/napnad/backend"
 
       - name: SSH to VPS & Deploy
         uses: appleboy/ssh-action@v0.1.7
@@ -41,14 +41,14 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
-            if [ ! -d "/deploy/snoorefi/backend" ]; then
-              echo "Membuat folder /deploy/snoorefi/backend..."
-              mkdir -p /deploy/snoorefi/backend
+            if [ ! -d "/deploy/napnad/backend" ]; then
+              echo "Membuat folder /deploy/napnad/backend..."
+              mkdir -p /deploy/napnad/backend
             fi
-            cd /deploy/snoorefi/backend
+            cd /deploy/napnad/backend
 
             # Buat atau perbarui file .env di VPS dari GitHub Secrets
-            echo "${{ secrets.ENV_FILE }}" > .env
+            echo "${{ secrets.ENV_FILE_NAPNAD }}" > .env
 
             # Login ke GHCR agar bisa pull image
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
