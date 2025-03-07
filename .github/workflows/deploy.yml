@@ -55,6 +55,5 @@ jobs:
 
             # Restart backend dengan image terbaru
             docker-compose pull
-            docker-compose down
-            docker-compose up -d --remove-orphans
-            docker exec -it napnad-backend sh -c "npx prisma migrate deploy"
+            docker-compose -p napnad-backend down
+            docker-compose -p napnad-backend up -d --remove-orphans
