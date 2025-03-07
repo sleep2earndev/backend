@@ -57,3 +57,4 @@ jobs:
             docker-compose pull
             docker-compose down
             docker-compose up -d --remove-orphans
+            docker exec -it napnad-backend sh -c "npx prisma migrate deploy"
