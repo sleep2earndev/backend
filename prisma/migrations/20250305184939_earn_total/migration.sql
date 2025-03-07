@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "totalEarning" ALTER COLUMN "totalEarn" DROP NOT NULL,
+ALTER COLUMN "totalEarn" SET DATA TYPE DECIMAL(65,30);

@@ -18,7 +18,7 @@ enum version{
   TWO
 }
 model UserApps{
-  owner String @unique @id
+  owner String @id
   fullName String
   claimInfo Json
   // signedClaim Json
@@ -29,7 +29,7 @@ model UserApps{
 model SleepData{
   idSleep Int @unique @default(autoincrement())
   dateOfSleep String 
-  duration Int
+  duration Decimal
   endTime String 
   claimInfo Json
   startTime String 
@@ -37,14 +37,15 @@ model SleepData{
   version version
   // signedClaim Json
   // signatures String
+  logId BigInt @unique
   ownersleep String
-  ownerRef UserApps @relation(fields: [ownersleep],references: [owner], onDelete: Cascade, onUpdate: Cascade)
+  ownerRef UserApps @relation(fields: [userId],references: [owner], onDelete: Cascade, onUpdate: Cascade)
   userId String
-  earning Int?
+  earning Decimal?
 }
 
 model totalEarning{
   userId String @unique @id
   fullName String
-  totalEarn Int
+  totalEarn Decimal?
 }

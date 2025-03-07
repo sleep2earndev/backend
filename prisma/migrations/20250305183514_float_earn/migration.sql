@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "SleepData" ALTER COLUMN "earning" SET DATA TYPE DOUBLE PRECISION;

@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "SleepData" ALTER COLUMN "duration" SET DATA TYPE DECIMAL(65,30);
