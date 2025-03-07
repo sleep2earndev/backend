@@ -18,7 +18,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
-            cd /deploy/snoorefi/backend
+            cd /deploy/napnad/backend
             echo "${{ secrets.ENV_FILE_NAPNAD }}" > .env
             docker-compose down
             docker-compose up -d
