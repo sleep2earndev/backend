@@ -189,8 +189,7 @@ const sleepLog2 = async (req) => {
             .format('YYYY-MM-DDTHH:mm:ss.SSS')
         const convertEndTime = moment(`${req.body.endDate} ${req.body.endTime}`, 'YYYY-MM-DD HH:mm:ss')
             .format('YYYY-MM-DDTHH:mm:ss.SSS')
-
-        console.log("log start end:", convertStartTime,' ',convertEndTime)
+        // console.log("log start end:", convertStartTime,' ',convertEndTime)
         const response = sleepResponse
             .filter(({startTime,endTime})=>{
                 const start= startTime
@@ -226,103 +225,96 @@ const sleepLog2 = async (req) => {
             throw new Error("Invalid JSON format for newResponse");
         }
 
-        //just crosscheck again, whether req body start end time is same with response from fitbit 
-        if(formatStartTime === req.body.startTime && formatEndTime === req.body.endTime){
-            //validation existing data sleep on db by log id
-            const existingLog = await prisma.sleepData.findUnique({
-                where: {
-                    logId: logId
-                }
-            });
-            // if data is exist on db 
-            if (existingLog) {
-                return {
-                    success:false,
-                    message: "already achieve reward",
-                    earn:0
-                }; 
+        //validation existing data sleep on db by log id
+        const existingLog = await prisma.sleepData.findUnique({
+            where: {
+                logId: logId
             }
-
-            //validation data user 
-            const existingUserApp = await prisma.userApps.findUnique({
-                where: { owner: req.user.user_id }
-            });
-            //if user not exist on table user
-            if (!existingUserApp) {
-                console.log(`User not found. Inserting new record.`);
-                await prisma.userApps.create({
-                    data: {
-                        owner: req.user.user_id,
-                        fullName: fullName,
-                        claimInfo: userClaimInfo
-                    }
-                });
-            } else {
-                console.log(`User already exists. Skipping insert.`);
-            }
-
-
-            // console.log("Req ID before insert:", req.user.user_id);
-
-            //count of earn
-            const earnHours = Number(process.env.EARN_HOUR)
-            let countEarn = duration * earnHours
-            let earn;
-            const maxEarn = Number(process.env.MAX_EARNING)
-            if (countEarn > maxEarn) {
-                earn = maxEarn
-            } else {
-                earn = countEarn
-            } 
-            
-            //insert data on sleep table if not exist on table sleep by logid
-            await prisma.sleepData.upsert({
-                where:{
-                    logId:logId
-                },
-                update:{},
-                create: {
-                    dateOfSleep: dateOfSleep,
-                    startTime: formatStartTime,
-                    summary: summary,
-                    version: "TWO",
-                    userId: req.user.user_id,
-                    duration: duration,
-                    endTime: formatEndTime,
-                    claimInfo: sleepClaimInfo,
-                    logId: logId,
-                    ownersleep: sleepOwner,
-                    earning: earn
-                }
-            })
-
-            //insert into table totalCount for leaderboard feature
-            await prisma.totalEarning.upsert({
-                where: {
-                    userId: req.user.user_id
-                },
-                update: {
-                    totalEarn: {
-                        increment: earn
-                    }
-                },
-                create: {
-                    userId: req.user.user_id,
-                    totalEarn: earn,
-                    fullName: fullName
-                }
-            })
-
+        });
+        // if data is exist on db 
+        if (existingLog) {
             return {
-                success: true,
-                earn: earn,
-                user: dataUser, sleep: proofSleepData
+                success: false,
+                message: "already achieve reward",
+                earn: 0
             };
-        }else{
-            return {
-                message:"invalid request"
-            }
         }
+
+        //validation data user 
+        const existingUserApp = await prisma.userApps.findUnique({
+            where: { owner: req.user.user_id }
+        });
+        //if user not exist on table user
+        if (!existingUserApp) {
+            console.log(`User not found. Inserting new record.`);
+            await prisma.userApps.create({
+                data: {
+                    owner: req.user.user_id,
+                    fullName: fullName,
+                    claimInfo: userClaimInfo
+                }
+            });
+        } else {
+            console.log(`User already exists. Skipping insert.`);
+        }
+
+
+        // console.log("Req ID before insert:", req.user.user_id);
+
+        //count of earn
+        const earnHours = Number(process.env.EARN_HOUR)
+        let countEarn = duration * earnHours
+        let earn;
+        const maxEarn = Number(process.env.MAX_EARNING)
+        if (countEarn > maxEarn) {
+            earn = maxEarn
+        } else {
+            earn = countEarn
+        }
+
+        //insert data on sleep table if not exist on table sleep by logid
+        await prisma.sleepData.upsert({
+            where: {
+                logId: logId
+            },
+            update: {},
+            create: {
+                dateOfSleep: dateOfSleep,
+                startTime: formatStartTime,
+                summary: summary,
+                version: "TWO",
+                userId: req.user.user_id,
+                duration: duration,
+                endTime: formatEndTime,
+                claimInfo: sleepClaimInfo,
+                logId: logId,
+                ownersleep: sleepOwner,
+                earning: earn
+            }
+        })
+
+        //insert into table totalCount for leaderboard feature
+        await prisma.totalEarning.upsert({
+            where: {
+                userId: req.user.user_id
+            },
+            update: {
+                totalEarn: {
+                    increment: earn
+                }
+            },
+            create: {
+                userId: req.user.user_id,
+                totalEarn: earn,
+                fullName: fullName
+            }
+        })
+
+        return {
+            success: true,
+            earn: earn,
+            user: dataUser, sleep: proofSleepData
+        };
     } catch (error) {
         console.error("Error inserting sleep data:", error);
         return { success: false, error: error.message };
