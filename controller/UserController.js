@@ -109,12 +109,16 @@ const getEarn2 = async (req, res) => {
   try {
     const result = await model.sleepLog2(req)
     if (!result) {
-      res.status(401).json({
+      return res.status(401).json({
         message: 'your sleep log is not found'
       })
-    }
+    } else if (result.success === false && result.error === "max energy is used") {  //handle negative case
+      return res.status(400).json({
+        message: 'insufient energy', //return insufient energy
+      })
+    };
 
-    res.status(200).json(result)
+    return res.status(200).json(result)
   } catch (err) {
     res.status(err.status || 500).json({
       message: err.message || "Something went wrong",

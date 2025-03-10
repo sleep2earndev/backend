@@ -35,6 +35,8 @@ model SleepData{
   startTime String 
   summary Json
   version version
+  startDate String
+  endDate String
   // signedClaim Json
   // signatures String
   logId BigInt @unique

@@ -4,7 +4,6 @@ require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
 const { json } = require('body-parser');
 const prisma = new PrismaClient
-const moment= require('moment');
 
 const generateToken = async (code) => {
     try {
@@ -62,10 +61,10 @@ const sleepLog = async (req) => {
         // const userSignatures= userData.signedClaim.claim.signatures;
 
         const startTime = String(JSON.parse(sleepData.claimInfo.context).extractedParameters.startTime);
-       
+
         const duration = parseInt(JSON.parse(sleepData.claimInfo.context).extractedParameters.duration) / 3600000;
         const endTime = JSON.parse(sleepData.claimInfo.context).extractedParameters.endTime;
-       
+
         const sleepClaimInfo = JSON.stringify(sleepData.claimInfo);
         const summary = String(JSON.parse(sleepData.claimInfo.context).extractedParameters.summary)
         const dateOfSleep = String(JSON.parse(sleepData.claimInfo.context).extractedParameters.dateOfSleep);
@@ -95,7 +94,7 @@ const sleepLog = async (req) => {
             }
 
         })
-        // console.log("Req ID before insert:", req.user.user_id);
+        // console.log("Req ID before insert:", userId);
 
         await prisma.sleepData.upsert({
             where: {
@@ -149,7 +148,30 @@ const profile = async (data) => {
 
 const sleepLog2 = async (req) => {
     try {
-        //get api from fitbit
+        const startDateBody=req.body.startDate
+        const endDateBody=req.body.endDate
+        const startTimeBody= req.body.startTime
+        const endTimeBody=req.body.endTime
+        const maxEnergy = req.body.maxEnergy
+        const userId = req.user.user_id
+
+       //get list sleep by user id dengan start date yang sama dengan body
+        const sleepDataByStartDate = await prisma.sleepData.count({
+            where:{
+                userId:userId,
+                startDate: startDateBody,
+            }
+        })
+
+        //bandingkan jumlah list tadi dengan max energy body dan if: length data DB >= energy NFT
+        if(sleepDataByStartDate >= maxEnergy){
+            return{
+                success:false,
+                error:'max energy is used'
+            }
+        }
+
+       //get api from fitbit
         const regexPatterns = zktls.getRegexPatterns();
         const publicOptions = { method: 'GET', headers: { accept: 'application/json' } };
         const token = req.headers['authorization'] ? req.headers['authorization'].split('Bearer ')[1] : req.cookies.access_token;
@@ -158,7 +180,7 @@ const sleepLog2 = async (req) => {
             responseMatches: regexPatterns.sleep
         };
 
-        const urlSleepDateLog = `https://api.fitbit.com/1.2/user/-/sleep/date/${req.body.startDate}/${req.body.endDate}.json`;
+        const urlSleepDateLog = `https://api.fitbit.com/1.2/user/-/sleep/date/${startDateBody}/${endDateBody}.json`;
         let proofSleepData = await zktls.fetchAndVerifyProof(urlSleepDateLog, publicOptions, privateOptionsSleep);
 
         if (!proofSleepData) {
@@ -166,8 +188,7 @@ const sleepLog2 = async (req) => {
         }
 
         let sleepData = proofSleepData;
-        // console.log("sleep extract:", sleepData)
-        
+
         if (!sleepData) {
             throw new Error("Missing required sleep data");
         }
@@ -179,37 +200,39 @@ const sleepLog2 = async (req) => {
 
         //breakdown result api fitbit for sleep by range
         const extractedParameters = JSON.parse(sleepData.claimInfo.context).extractedParameters;
-       //convert context from zk which is regex into json to access it
+        //convert context from zk which is regex into json to access it
         const sleepArray = JSON.parse(extractedParameters.sleep);
         // console.log("Parsed sleep data:", sleepArray); // Debugging
         const sleepResponse = Array.isArray(sleepArray) ? sleepArray : [sleepArray];
 
         //filter array by start time and end time
-        const convertStartTime = moment(`${req.body.startDate} ${req.body.startTime}`, 'YYYY-MM-DD HH:mm:ss')
-            .format('YYYY-MM-DDTHH:mm:ss.SSS')
-        const convertEndTime = moment(`${req.body.endDate} ${req.body.endTime}`, 'YYYY-MM-DD HH:mm:ss')
-            .format('YYYY-MM-DDTHH:mm:ss.SSS')
+        const convertStartTime = new Date(`${startDateBody} ${startTimeBody}`)
+            .toISOString().replace("Z","");
+        const convertEndTime = new Date(`${endDateBody} ${endTimeBody}`)
+            .toISOString().replace("Z","");
         // console.log("log start end:", convertStartTime,' ',convertEndTime)
         const response = sleepResponse
-            .filter(({startTime,endTime})=>{
-                const start= startTime
-                const end= endTime
-                return start>=convertStartTime && end <=convertEndTime
+            .filter(({ startTime, endTime }) => {
+                const start = new Date(startTime).toISOString().replace("Z","");
+                const end = new Date(endTime).toISOString().replace("Z","");
+                return start >= convertStartTime && end <= convertEndTime
             })
-            .sort((a, b) => new Date(b.startTime) - new Date(a.startTime)); 
+            .sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
         const newResponse = response[0];
         // console.log("Data sleep terbaru:", newResponse);
 
         //breakdown data which will be insert on table sleep
-        const formatStartTime = moment(newResponse.startTime).format("HH:mm");
+        const dateStart = new Date(newResponse.startTime);
+        const formatStartTime = `${String(dateStart.getHours()).padStart(2, "0")}:${String(dateStart.getMinutes()).padStart(2, "0")}`;
         const duration = newResponse.duration / 3600000;
-        const formatEndTime = moment(newResponse.endTime).format("HH:mm");
+        const dateEnd = new Date(newResponse.endTime);
+        const formatEndTime = `${String(dateEnd.getHours()).padStart(2, "0")}:${String(dateEnd.getMinutes()).padStart(2, "0")}`;
         const sleepClaimInfo = JSON.stringify(sleepData.claimInfo);
         const summary = String(JSON.parse(sleepData.claimInfo.context).extractedParameters.summary)
         const dateOfSleep = newResponse.dateOfSleep;
         const logId = BigInt(newResponse.logId)
         const sleepOwner = sleepData.signedClaim.claim.owner || "Unknown sleep User";
-        
+
         //crosscheck is json of newvalue 
         const isValidJson = (str) => {
             try {
@@ -242,14 +265,14 @@ const sleepLog2 = async (req) => {
 
         //validation data user 
         const existingUserApp = await prisma.userApps.findUnique({
-            where: { owner: req.user.user_id }
+            where: { owner: userId }
         });
         //if user not exist on table user
         if (!existingUserApp) {
             console.log(`User not found. Inserting new record.`);
             await prisma.userApps.create({
                 data: {
-                    owner: req.user.user_id,
+                    owner: userId,
                     fullName: fullName,
                     claimInfo: userClaimInfo
                 }
@@ -283,10 +306,12 @@ const sleepLog2 = async (req) => {
                 startTime: formatStartTime,
                 summary: summary,
                 version: "TWO",
-                userId: req.user.user_id,
+                userId: userId,
                 duration: duration,
                 endTime: formatEndTime,
                 claimInfo: sleepClaimInfo,
+                startDate:startDateBody,
+                endDate:endDateBody,
                 logId: logId,
                 ownersleep: sleepOwner,
                 earning: earn
@@ -296,7 +321,7 @@ const sleepLog2 = async (req) => {
         //insert into table totalCount for leaderboard feature
         await prisma.totalEarning.upsert({
             where: {
-                userId: req.user.user_id
+                userId: userId
             },
             update: {
                 totalEarn: {
@@ -304,7 +329,7 @@ const sleepLog2 = async (req) => {
                 }
             },
             create: {
-                userId: req.user.user_id,
+                userId: userId,
                 totalEarn: earn,
                 fullName: fullName
             }
@@ -321,19 +346,19 @@ const sleepLog2 = async (req) => {
     }
 };
 
-const leaderboard= async()=>{
-    try{
-        const data= await prisma.totalEarning.findMany({
-            take:10,
-            orderBy:{
-                totalEarn:'desc'
+const leaderboard = async () => {
+    try {
+        const data = await prisma.totalEarning.findMany({
+            take: 10,
+            orderBy: {
+                totalEarn: 'desc'
             }
         })
         return data;
-    }catch(error){
+    } catch (error) {
         console.error("Error get data leaderboard:", error);
         return { success: false, error: error.message };
     }
 }
-module.exports = { generateToken, sleepLog, profile, sleepLog2,leaderboard };
+module.exports = { generateToken, sleepLog, profile, sleepLog2, leaderboard };
 
