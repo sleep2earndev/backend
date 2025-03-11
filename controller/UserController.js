@@ -201,4 +201,57 @@ const chatWithCoach = async (req, res) => {
   }
 };
 
-module.exports = { token, redirectURi, getEarn, getProfile, getEarn2, leaderboard, chatWithCoach };
+const logout = async (req, res) => {
+  try {
+    const access_token = req.headers['authorization']
+      ? req.headers['authorization'].split('Bearer ')[1]
+      : req.cookies.access_token;
+
+    if (!access_token) {
+      return res.status(400).json({ message: "No token provided when logout" });
+    }
+
+    await axios.post(
+      "https://api.fitbit.com/oauth2/revoke",
+      new URLSearchParams({ token: access_token }),
+      {
+        headers: {
+          Authorization: `Basic ${Buffer.from(`${process.env.CLIENT_ID}:${process.env.CLIENT_SECRET}`).toString('base64')}`,
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      }
+    );
+
+    res.clearCookie("access_token", {
+      httpOnly: process.env.HTTPONLY === "true",
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.SAMESITE,
+      domain: process.env.DOMAIN
+    });
+    
+    res.clearCookie("refresh_token", {
+      httpOnly: process.env.HTTPONLY === "true",
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.SAMESITE,
+      domain: process.env.DOMAIN
+    });
+    res.clearCookie("call", {
+      httpOnly: process.env.HTTPONLY === "true",
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.SAMESITE,
+      domain: process.env.DOMAIN
+    });
+
+    return res.status(200).json({
+      message:"log out"
+    })
+
+  } catch (err) {
+    return res.status(err.response?.status || 500).json({
+      message: err.response?.data?.error_description || err.message || "Something went wrong",
+      error: err.response?.data || null
+    });
+  }
+};
+
+module.exports = { token, redirectURi, getEarn, getProfile, getEarn2, leaderboard, chatWithCoach,logout };
