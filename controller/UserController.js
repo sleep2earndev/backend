@@ -163,7 +163,7 @@ const leaderboard= async(req, res)=>{
   }
 }
 
-const chatWithCoach = async () => {
+const chatWithCoach = async (req, res) => {
   try {
     if (Array.isArray(req.body.messages)) {
       res.status(422).json({
