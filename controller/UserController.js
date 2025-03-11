@@ -1,3 +1,4 @@
+const { default: axios } = require("axios");
 const model = require("../model/UserModel");
 require('dotenv').config();
 
