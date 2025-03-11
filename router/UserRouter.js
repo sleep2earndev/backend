@@ -11,5 +11,6 @@ router.post('/v2/get-earn',midlleware.middlewareProofProfile, controller.getEarn
 router.get('/profile',midlleware.middlewareProofProfile,controller.getProfile)
 router.get('/leaderboard', midlleware.middlewareProofProfile,controller.leaderboard)
 router.post('/chat-coach', midlleware.middlewareProofProfile,controller.chatWithCoach)
+router.delete('/logout', midlleware.middlewareProofProfile,controller.logout)
 
 module.exports = router;
