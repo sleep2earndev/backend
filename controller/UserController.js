@@ -236,7 +236,9 @@ const logout = async (req, res) => {
       domain: process.env.DOMAIN
     });
 
-    return res.redirect("http://localhost:4000/user/auth/fitbit");
+    return res.status(200).json({
+      message:"log out"
+    })
 
   } catch (err) {
     return res.status(err.response?.status || 500).json({
