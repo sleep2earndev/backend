@@ -163,4 +163,39 @@ const leaderboard= async(req, res)=>{
   }
 }
 
-module.exports = { token, redirectURi, getEarn, getProfile, getEarn2, leaderboard };
+const chatWithCoach = async () => {
+  try {
+    if (Array.isArray(req.body.messages)) {
+      res.status(422).json({
+        message: "your messages is not valid",
+      });
+    }
+    const result = await axios.post(
+      `${process.env.AI_BASE_URL}/v1/chat/completions`,
+      {
+        model: "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+        messages: req.body.messages,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.AI_API_KEY}}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (!result) {
+      res.status(401).json({
+        message: "your sleep log is not found",
+      });
+    }
+
+    res.status(200).json(result);
+  } catch (err) {
+    res.status(err.status || 500).json({
+      message: err.message || "Something went wrong",
+      error: err.error || null,
+    });
+  }
+};
+
+module.exports = { token, redirectURi, getEarn, getProfile, getEarn2, leaderboard, chatWithCoach };
