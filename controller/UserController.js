@@ -228,7 +228,13 @@ const logout = async (req, res) => {
       sameSite: process.env.SAMESITE,
       domain: process.env.DOMAIN
     });
-
+    
+    res.clearCookie("refresh_token", {
+      httpOnly: process.env.HTTPONLY === "true",
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.SAMESITE,
+      domain: process.env.DOMAIN
+    });
     res.clearCookie("call", {
       httpOnly: process.env.HTTPONLY === "true",
       secure: process.env.NODE_ENV === 'production',
