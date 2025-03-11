@@ -20,5 +20,5 @@ jobs:
           script: |
             cd /deploy/napnad/backend
             echo "${{ secrets.ENV_FILE_NAPNAD }}" > .env
-            docker-compose down
-            docker-compose up -d
+            docker-compose -p napnad-backend down
+            docker-compose -p napnad-backend up -d --remove-orphans
