@@ -1,5 +1,6 @@
 const { default: axios } = require("axios");
 require('dotenv').config();
+const NodeCache = require("node-cache");
 
 const CACHE_TTL = 365 * 24 * 60 * 60
 const cache = new NodeCache({ stdTTL: CACHE_TTL }); // TTL 1 tahun (365 hari)
